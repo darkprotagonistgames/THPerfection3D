@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 9c6606aed72d0804b9b0cab8b6c11151
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 247538
+  packageName: 'Voxel Toolkit: MagicaVoxel Importer & Optimizer'
+  packageVersion: 3.02
+  assetPath: Assets/Plugins/Voxel Toolkit/Art/Skyboxes/Materials/Skybox.mat
+  uploadId: 902436

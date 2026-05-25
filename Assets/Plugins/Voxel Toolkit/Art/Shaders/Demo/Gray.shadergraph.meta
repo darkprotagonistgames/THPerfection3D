@@ -1,0 +1,17 @@
+fileFormatVersion: 2
+guid: 42aad1ee9bd0a6441a48f89400e5daa1
+ScriptedImporter:
+  internalIDToNameTable: []
+  externalObjects: {}
+  serializedVersion: 2
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+  script: {fileID: 11500000, guid: 625f186215c104763be7675aa2d941aa, type: 3}
+AssetOrigin:
+  serializedVersion: 1
+  productId: 247538
+  packageName: 'Voxel Toolkit: MagicaVoxel Importer & Optimizer'
+  packageVersion: 3.02
+  assetPath: Assets/Plugins/Voxel Toolkit/Art/Shaders/Demo/Gray.shadergraph
+  uploadId: 902436

@@ -1,0 +1,104 @@
+{
+    "parts": [
+        {
+            "name": "lLeg",
+            "parentName": "lThigh",
+            "pivotType": 2,
+            "manualOffset": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            }
+        },
+        {
+            "name": "lThigh",
+            "parentName": "torso",
+            "pivotType": 2,
+            "manualOffset": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            }
+        },
+        {
+            "name": "RThigh",
+            "parentName": "torso",
+            "pivotType": 2,
+            "manualOffset": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            }
+        },
+        {
+            "name": "rLeg",
+            "parentName": "RThigh",
+            "pivotType": 2,
+            "manualOffset": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            }
+        },
+        {
+            "name": "rArm",
+            "parentName": "rSholder",
+            "pivotType": 4,
+            "manualOffset": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            }
+        },
+        {
+            "name": "rSholder",
+            "parentName": "torso",
+            "pivotType": 4,
+            "manualOffset": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            }
+        },
+        {
+            "name": "lArm",
+            "parentName": "lSholder",
+            "pivotType": 3,
+            "manualOffset": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            }
+        },
+        {
+            "name": "lSholder",
+            "parentName": "torso",
+            "pivotType": 3,
+            "manualOffset": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            }
+        },
+        {
+            "name": "torso",
+            "parentName": "Root",
+            "pivotType": 0,
+            "manualOffset": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            }
+        },
+        {
+            "name": "head",
+            "parentName": "torso",
+            "pivotType": 0,
+            "manualOffset": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            }
+        }
+    ]
+}
