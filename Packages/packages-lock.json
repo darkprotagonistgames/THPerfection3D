@@ -1,5 +1,13 @@
 {
   "dependencies": {
+    "com.rukhanka.animation": {
+      "version": "file:com.rukhanka.animation",
+      "depth": 0,
+      "source": "embedded",
+      "dependencies": {
+        "com.unity.entities.graphics": "1.4.16"
+      }
+    },
     "com.unity.2d.sprite": {
       "version": "1.0.0",
       "depth": 1,
