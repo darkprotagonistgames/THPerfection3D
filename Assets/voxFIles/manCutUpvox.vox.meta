@@ -14,14 +14,14 @@ ScriptedImporter:
   transparentEdgeShift: 0
   scale: 1
   indexFormat: 0
-  generateLightmapUV: 0
+  generateLightmapUV: 1
   generateColliders: 1
   chunkSize: 64
   AOStrength: 1
   originMode: 0
   generationMode: 1
-  meshGenerationApproach: 0
-  materialPropertiesEmbeddingMode: 0
+  meshGenerationApproach: 1
+  materialPropertiesEmbeddingMode: 1
   textureOptimizationMode: 3
   opaqueMaterial: {instanceID: 0}
   transparentMaterial: {instanceID: 0}
