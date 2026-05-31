@@ -14,11 +14,45 @@ namespace THPerfection.GeneratedEvents
     /// </summary>
     public interface IEcsFrameEvent : IComponentData {}
 
+    public enum wepon
+    {
+        bat = 0,
+        gun = 1,
+        shotgun = 2,
+    }
+
+    public enum targetable
+    {
+        wall = 0,
+        zombi = 1,
+        player = 2,
+    }
+
+    public struct weponbatTag : IComponentData {}
+    public struct targetablewallTag : IComponentData {}
+    public struct targetablezombiTag : IComponentData {}
+    public struct targetableplayerTag : IComponentData {}
+
     public struct jumpEvent : IEcsFrameEvent
     {
         public Entity Sender;
         public bool Enabled;
         public float high;
+    }
+
+    public struct damageEvent : IEcsFrameEvent
+    {
+        public Entity Sender;
+        public bool Enabled;
+        public float amount;
+        public wepon sourceType;
+        public targetable targetType;
+    }
+
+    public struct deathEvent : IEcsFrameEvent
+    {
+        public Entity Sender;
+        public bool Enabled;
     }
 
     public static class EcsEventExtensions
@@ -49,6 +83,96 @@ namespace THPerfection.GeneratedEvents
             return entity;
         }
 
+        public static Entity CreatedamageEvent(this Entity sender, EntityCommandBuffer ecb, float amount, wepon sourceType, targetable targetType)
+        {
+            var entity = ecb.CreateEntity();
+            var ev = new damageEvent
+            {
+                Sender = sender,
+                Enabled = false,
+                amount = amount,
+                sourceType = sourceType,
+                targetType = targetType,
+            };
+            ecb.AddComponent(entity, ev);
+            switch (sourceType)
+            {
+                case wepon.bat:
+                    ecb.AddComponent(entity, new weponbatTag());
+                    break;
+            }
+            switch (targetType)
+            {
+                case targetable.wall:
+                    ecb.AddComponent(entity, new targetablewallTag());
+                    break;
+                case targetable.zombi:
+                    ecb.AddComponent(entity, new targetablezombiTag());
+                    break;
+                case targetable.player:
+                    ecb.AddComponent(entity, new targetableplayerTag());
+                    break;
+            }
+            return entity;
+        }
+
+        public static Entity CreatedamageEvent(this Entity sender, EntityCommandBuffer.ParallelWriter ecb, int sortKey, float amount, wepon sourceType, targetable targetType)
+        {
+            var entity = ecb.CreateEntity(sortKey);
+            var ev = new damageEvent
+            {
+                Sender = sender,
+                Enabled = false,
+                amount = amount,
+                sourceType = sourceType,
+                targetType = targetType,
+            };
+            ecb.AddComponent(sortKey, entity, ev);
+            switch (sourceType)
+            {
+                case wepon.bat:
+                    ecb.AddComponent(sortKey, entity, new weponbatTag());
+                    break;
+            }
+            switch (targetType)
+            {
+                case targetable.wall:
+                    ecb.AddComponent(sortKey, entity, new targetablewallTag());
+                    break;
+                case targetable.zombi:
+                    ecb.AddComponent(sortKey, entity, new targetablezombiTag());
+                    break;
+                case targetable.player:
+                    ecb.AddComponent(sortKey, entity, new targetableplayerTag());
+                    break;
+            }
+            return entity;
+        }
+
+        public static Entity CreatedeathEvent(this Entity sender, EntityCommandBuffer ecb)
+        {
+            var entity = ecb.CreateEntity();
+            var ev = new deathEvent
+            {
+                Sender = sender,
+                Enabled = false,
+            };
+            ecb.AddComponent(entity, ev);
+            return entity;
+        }
+
+        public static Entity CreatedeathEvent(this Entity sender, EntityCommandBuffer.ParallelWriter ecb, int sortKey)
+        {
+            var entity = ecb.CreateEntity(sortKey);
+            var ev = new deathEvent
+            {
+                Sender = sender,
+                Enabled = false,
+            };
+            ecb.AddComponent(sortKey, entity, ev);
+            return entity;
+        }
+
     }
 
     [BurstCompile]
@@ -65,6 +189,22 @@ namespace THPerfection.GeneratedEvents
         public void OnUpdate(ref SystemState state)
         {
             foreach (var ev in SystemAPI.Query<RefRW<jumpEvent>>())
+            {
+                if (!ev.ValueRO.Enabled)
+                {
+                    ev.ValueRW.Enabled = true;
+                }
+            }
+
+            foreach (var ev in SystemAPI.Query<RefRW<damageEvent>>())
+            {
+                if (!ev.ValueRO.Enabled)
+                {
+                    ev.ValueRW.Enabled = true;
+                }
+            }
+
+            foreach (var ev in SystemAPI.Query<RefRW<deathEvent>>())
             {
                 if (!ev.ValueRO.Enabled)
                 {
@@ -98,8 +238,25 @@ namespace THPerfection.GeneratedEvents
                 }
             }
 
+            foreach (var (ev, entity) in SystemAPI.Query<RefRO<damageEvent>>().WithEntityAccess())
+            {
+                if (ev.ValueRO.Enabled)
+                {
+                    ecb.DestroyEntity(entity);
+                }
+            }
+
+            foreach (var (ev, entity) in SystemAPI.Query<RefRO<deathEvent>>().WithEntityAccess())
+            {
+                if (ev.ValueRO.Enabled)
+                {
+                    ecb.DestroyEntity(entity);
+                }
+            }
+
             ecb.Playback(state.EntityManager);
             ecb.Dispose();
         }
     }
+
 }

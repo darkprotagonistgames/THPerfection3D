@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 5741555921452746381}
   - component: {fileID: 3335396352910197029}
   - component: {fileID: 8827364519283746501}
+  - component: {fileID: 6129353819233669471}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -90,6 +91,27 @@ MonoBehaviour:
   m_EditorClassIdentifier: THPerfection3D::CharacterSettings
   FaceVelocity: 1
   MinSpeedToRotate: 0.1
+--- !u!135 &6129353819233669471
+SphereCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5601796154305430291}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Radius: 0.5
+  m_Center: {x: 0, y: 0, z: 0}
 --- !u!1001 &1592517514202905303
 PrefabInstance:
   m_ObjectHideFlags: 0
