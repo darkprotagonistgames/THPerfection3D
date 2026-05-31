@@ -1,0 +1,25 @@
+{
+    "name": "THPerfection3D",
+    "rootNamespace": "",
+    "references": [
+        "THPerfection.GeneratedEvents",
+        "Unity.Entities",
+        "Unity.Entities.Hybrid",
+        "Unity.Physics",
+        "Unity.Transforms",
+        "Unity.Mathematics",
+        "Unity.Burst",
+        "Unity.Collections",
+        "Unity.InputSystem",
+        "Unity.ugui"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
