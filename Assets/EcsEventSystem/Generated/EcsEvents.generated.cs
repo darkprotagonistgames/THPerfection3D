@@ -43,6 +43,7 @@ namespace THPerfection.GeneratedEvents
     public struct damageEvent : IEcsFrameEvent
     {
         public Entity Sender;
+        public Entity Victim;
         public bool Enabled;
         public float amount;
         public wepon sourceType;
@@ -83,19 +84,20 @@ namespace THPerfection.GeneratedEvents
             return entity;
         }
 
-        public static Entity CreatedamageEvent(this Entity sender, EntityCommandBuffer ecb, float amount, wepon sourceType, targetable targetType)
+        public static Entity CreatedamageEvent(this Entity victim, Entity sender, EntityCommandBuffer ecb, float amount, wepon sourceType, targetable targetType)
         {
             var entity = ecb.CreateEntity();
             var ev = new damageEvent
             {
                 Sender = sender,
+                Victim = victim,
                 Enabled = false,
                 amount = amount,
                 sourceType = sourceType,
                 targetType = targetType,
             };
             ecb.AddComponent(entity, ev);
-            switch (sourceType)
+switch (sourceType)
             {
                 case wepon.bat:
                     ecb.AddComponent(entity, new weponbatTag());
@@ -116,19 +118,20 @@ namespace THPerfection.GeneratedEvents
             return entity;
         }
 
-        public static Entity CreatedamageEvent(this Entity sender, EntityCommandBuffer.ParallelWriter ecb, int sortKey, float amount, wepon sourceType, targetable targetType)
+        public static Entity CreatedamageEvent(this Entity victim, Entity sender, EntityCommandBuffer.ParallelWriter ecb, int sortKey, float amount, wepon sourceType, targetable targetType)
         {
             var entity = ecb.CreateEntity(sortKey);
             var ev = new damageEvent
             {
                 Sender = sender,
+                Victim = victim,
                 Enabled = false,
                 amount = amount,
                 sourceType = sourceType,
                 targetType = targetType,
             };
             ecb.AddComponent(sortKey, entity, ev);
-            switch (sourceType)
+switch (sourceType)
             {
                 case wepon.bat:
                     ecb.AddComponent(sortKey, entity, new weponbatTag());

@@ -21,7 +21,7 @@ public partial class DamageHealthSystem : SystemBase
             if (!ev.ValueRO.Enabled)
                 continue;
 
-            Entity victim = ev.ValueRO.Sender;
+            Entity victim = ev.ValueRO.Victim;
             if (!healthLookup.HasComponent(victim))
                 continue;
 
@@ -32,5 +32,5 @@ public partial class DamageHealthSystem : SystemBase
             Debug.Log(
                 $"Damage victim={victim.Index} amount={damage} health={health.ValueRO.Value} weapon={ev.ValueRO.sourceType} target={ev.ValueRO.targetType}");
         }
-    }
+}
 }

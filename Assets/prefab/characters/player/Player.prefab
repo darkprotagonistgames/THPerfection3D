@@ -181,7 +181,7 @@ GameObject:
   - component: {fileID: 9100000000000000105}
   - component: {fileID: 9100000000000000103}
   - component: {fileID: 9100000000000000104}
-  m_Layer: 8
+  m_Layer: 10
   m_Name: Hurtbox
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -198,7 +198,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 7.4248, z: 1}
+  m_LocalScale: {x: 2.2201748, y: -9.07584, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 7009438782708369002}
@@ -277,7 +277,7 @@ GameObject:
   - component: {fileID: 9100000000000000205}
   - component: {fileID: 9100000000000000203}
   - component: {fileID: 9100000000000000204}
-  m_Layer: 9
+  m_Layer: 11
   m_Name: Hitbox
   m_TagString: Untagged
   m_Icon: {fileID: 0}

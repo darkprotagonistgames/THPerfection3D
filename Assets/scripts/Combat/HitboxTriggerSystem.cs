@@ -11,7 +11,6 @@ using Unity.Physics.Systems;
 /// </summary>
 [BurstCompile]
 [UpdateInGroup(typeof(PhysicsSimulationGroup))]
-[UpdateAfter(typeof(PhysicsSystemGroup))]
 public partial struct HitboxTriggerSystem : ISystem
 {
     private NativeParallelHashMap<long, byte> _processedPairs;
@@ -44,10 +43,12 @@ public partial struct HitboxTriggerSystem : ISystem
         var hurtboxDataLookup = SystemAPI.GetComponentLookup<HurtboxData>(true);
         var hitboxOwnerLookup = SystemAPI.GetComponentLookup<HitboxOwner>(true);
         var hurtboxOwnerLookup = SystemAPI.GetComponentLookup<HurtboxOwner>(true);
+        var invulnerableLookup = SystemAPI.GetComponentLookup<SpawnInvulnerabilityTag>(true);
         hitboxDataLookup.Update(ref state);
         hurtboxDataLookup.Update(ref state);
         hitboxOwnerLookup.Update(ref state);
         hurtboxOwnerLookup.Update(ref state);
+        invulnerableLookup.Update(ref state);
 
         var job = new HitboxTriggerJob
         {
@@ -55,6 +56,7 @@ public partial struct HitboxTriggerSystem : ISystem
             HurtboxDataLookup = hurtboxDataLookup,
             HitboxOwnerLookup = hitboxOwnerLookup,
             HurtboxOwnerLookup = hurtboxOwnerLookup,
+            InvulnerableLookup = invulnerableLookup,
             ProcessedPairs = _processedPairs.AsParallelWriter(),
             Ecb = ecb.AsParallelWriter(),
         };
@@ -71,6 +73,7 @@ public partial struct HitboxTriggerSystem : ISystem
         [ReadOnly] public ComponentLookup<HurtboxData> HurtboxDataLookup;
         [ReadOnly] public ComponentLookup<HitboxOwner> HitboxOwnerLookup;
         [ReadOnly] public ComponentLookup<HurtboxOwner> HurtboxOwnerLookup;
+        [ReadOnly] public ComponentLookup<SpawnInvulnerabilityTag> InvulnerableLookup;
         public NativeParallelHashMap<long, byte>.ParallelWriter ProcessedPairs;
         public EntityCommandBuffer.ParallelWriter Ecb;
 
@@ -117,12 +120,16 @@ public partial struct HitboxTriggerSystem : ISystem
             if (hitboxOwner == hurtboxOwner)
                 return;
 
-            long pairKey = MakePairKey(hitboxEntity, hurtboxEntity);
-            if (!ProcessedPairs.TryAdd(pairKey, 1))
+            if (InvulnerableLookup.HasComponent(hurtboxOwner))
                 return;
 
-            hurtboxOwner.CreatedamageEvent(Ecb, 0, hitbox.Damage, hitbox.WeaponType, hurtbox.Category);
-        }
+            long pairKey = MakePairKey(hitboxEntity, hurtboxEntity);
+if (!ProcessedPairs.TryAdd(pairKey, 1))
+                return;
+
+            int sortKey = (int)(pairKey ^ (pairKey >> 32));
+            hurtboxOwner.CreatedamageEvent(hitboxOwner, Ecb, sortKey, hitbox.Damage, hitbox.WeaponType, hurtbox.Category);
+}
 
         static long MakePairKey(Entity hitboxEntity, Entity hurtboxEntity)
         {

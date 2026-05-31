@@ -7,8 +7,11 @@ using Unity.Transforms;
 /// <summary>
 /// Spawner for the XZ ground plane. Uses spawnProtection sphere geometry and the
 /// layer matrix (spawnProtection collides only with spawnProtection).
+/// Runs at the start of simulation, before <see cref="TransformSystemGroup"/>, so spawned entities
+/// get world transforms before the first physics step (subscene-safe; Init group can run before subscenes load).
 /// </summary>
 [UpdateInGroup(typeof(SimulationSystemGroup), OrderFirst = true)]
+[UpdateBefore(typeof(TransformSystemGroup))]
 public partial struct SafeRandomSpawnerSystem : ISystem
 {
     private static readonly CollisionFilter ProtectionFilter = new()
@@ -24,8 +27,7 @@ public partial struct SafeRandomSpawnerSystem : ISystem
 
     public void OnUpdate(ref SystemState state)
     {
-        if (!SystemAPI.TryGetSingleton(out PhysicsWorldSingleton physicsWorld))
-            return;
+        bool hasPhysicsWorld = SystemAPI.TryGetSingleton(out PhysicsWorldSingleton physicsWorld);
 
         var ecb = new EntityCommandBuffer(Allocator.Temp);
 
@@ -60,7 +62,7 @@ public partial struct SafeRandomSpawnerSystem : ISystem
                         candidate.z = math.clamp(candidate.z, config.BoundsMin.y, config.BoundsMax.y);
                     }
 
-                    if (!OverlapsAnything(in physicsWorld, in candidate, ref config, in confirmed))
+                    if (!OverlapsAnything(hasPhysicsWorld, in physicsWorld, in candidate, ref config, in confirmed))
                     {
                         placed = true;
                         break;
@@ -75,6 +77,7 @@ public partial struct SafeRandomSpawnerSystem : ISystem
             {
                 Entity spawned = ecb.Instantiate(spawner.ValueRO.EntityPrefab);
                 ecb.SetComponent(spawned, LocalTransform.FromPosition(confirmed[i]));
+                ecb.AddComponent<SpawnInvulnerabilityTag>(spawned);
             }
 
             confirmed.Dispose();
@@ -86,12 +89,13 @@ public partial struct SafeRandomSpawnerSystem : ISystem
     }
 
     private static bool OverlapsAnything(
+        bool hasPhysicsWorld,
         in PhysicsWorldSingleton physicsWorld,
         in float3 position,
         ref SpawnConfigBlob config,
         in NativeList<float3> confirmed)
     {
-        if (OverlapsPhysicsWorld(in physicsWorld, in position, ref config))
+        if (hasPhysicsWorld && OverlapsPhysicsWorld(in physicsWorld, in position, ref config))
             return true;
 
         for (int i = 0; i < confirmed.Length; i++)

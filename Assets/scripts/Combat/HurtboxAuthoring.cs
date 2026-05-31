@@ -3,9 +3,10 @@ using Unity.Entities;
 using UnityEngine;
 
 /// <summary>
-/// Passive damage receiver on a collider child. Put this GameObject on the <see cref="Layers.HurtBox"/> layer.
-/// Use the collider's Include Layers so it only overlaps <see cref="Layers.HitBox"/>.
-/// Requires a trigger collider and a kinematic Rigidbody on the same GameObject.
+/// Passive damage receiver on a collider child. Put this GameObject on <see cref="Layers.HurtBox"/> (enemy)
+/// or <see cref="Layers.PlayerHurtBox"/> (player). Include Layers are set to the matching hitbox layer.
+/// Requires a trigger collider and a kinematic Rigidbody (separate physics body with correct layer).
+/// <see cref="CombatColliderFollowOwnerSystem"/> keeps the body aligned with the character root.
 /// </summary>
 [RequireComponent(typeof(Collider))]
 [DisallowMultipleComponent]
@@ -19,23 +20,30 @@ public class HurtboxAuthoring : MonoBehaviour
 
     void OnValidate()
     {
-        if (gameObject.layer != CombatLayers.HurtBoxLayer)
+        CombatColliderBakeUtility.EnsureKinematicRigidbody(gameObject);
+
+        if (gameObject.layer != CombatLayers.HurtBoxLayer
+            && gameObject.layer != CombatLayers.PlayerHurtBoxLayer)
+        {
             gameObject.layer = CombatLayers.HurtBoxLayer;
+        }
+
+        int includeMask = CombatLayers.GetHurtBoxIncludeMask(gameObject.layer);
 
         if (TryGetComponent<SphereCollider>(out var sphere))
         {
             sphere.isTrigger = true;
-            sphere.includeLayers = CombatLayers.HurtBoxIncludeMask;
+            sphere.includeLayers = includeMask;
         }
         else if (TryGetComponent<BoxCollider>(out var box))
         {
             box.isTrigger = true;
-            box.includeLayers = CombatLayers.HurtBoxIncludeMask;
+            box.includeLayers = includeMask;
         }
         else if (TryGetComponent<CapsuleCollider>(out var capsule))
         {
             capsule.isTrigger = true;
-            capsule.includeLayers = CombatLayers.HurtBoxIncludeMask;
+            capsule.includeLayers = includeMask;
         }
     }
 
@@ -49,6 +57,7 @@ public class HurtboxAuthoring : MonoBehaviour
             AddComponent(entity, new HurtboxData { Category = authoring.Category });
             AddComponent(entity, new HurtboxOwner { Value = ownerEntity });
             CombatOwnerBakeUtility.AddTargetableTag(this, entity, authoring.Category);
+            CombatColliderBakeUtility.BakeLocalOffset(this, authoring, entity);
         }
     }
 }

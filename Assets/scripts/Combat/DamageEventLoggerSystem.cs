@@ -19,7 +19,7 @@ public partial class DamageEventLoggerSystem : SystemBase
                 continue;
 
             Debug.Log(
-                $"Damage victim={ev.ValueRO.Sender.Index} amount={ev.ValueRO.amount} weapon={ev.ValueRO.sourceType} target={ev.ValueRO.targetType}");
+                $"Damage victim={ev.ValueRO.Victim.Index} amount={ev.ValueRO.amount} weapon={ev.ValueRO.sourceType} target={ev.ValueRO.targetType}");
         }
-    }
+}
 }

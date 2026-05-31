@@ -12,4 +12,6 @@ public enum Layers
     spawnProtection = 7,
     HurtBox = 8,
     HitBox = 9,
+    PlayerHurtBox = 10,
+    PlayerHitBox = 11,
 }

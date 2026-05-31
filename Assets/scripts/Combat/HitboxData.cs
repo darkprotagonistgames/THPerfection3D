@@ -25,3 +25,9 @@ public struct HurtboxOwner : IComponentData
 {
     public Entity Value;
 }
+
+/// <summary>
+/// Temporary tag added at spawn to prevent instant death from overlapping hitboxes
+/// (e.g. if the player's hitbox is active at the spawn origin).
+/// </summary>
+public struct SpawnInvulnerabilityTag : IComponentData { }

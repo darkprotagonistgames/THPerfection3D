@@ -162,7 +162,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: THPerfection3D::CharacterSettings
   FaceVelocity: 1
   MinSpeedToRotate: 0.1
-  Health: 10000
+  Health: 200
 --- !u!1 &9200000000000000101
 GameObject:
   m_ObjectHideFlags: 0
@@ -234,7 +234,7 @@ SphereCollider:
   m_Material: {fileID: 0}
   m_IncludeLayers:
     serializedVersion: 2
-    m_Bits: 512
+    m_Bits: 2048
   m_ExcludeLayers:
     serializedVersion: 2
     m_Bits: 0

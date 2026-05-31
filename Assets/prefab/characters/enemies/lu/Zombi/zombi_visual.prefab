@@ -873,6 +873,7 @@ GameObject:
   - component: {fileID: 3271505863159231740}
   - component: {fileID: 5252009355494276918}
   - component: {fileID: 7532428932772557664}
+  - component: {fileID: 8347291056382749501}
   m_Layer: 0
   m_Name: zombi_visual
   m_TagString: Untagged
@@ -941,6 +942,18 @@ MonoBehaviour:
   hasAnimationEvents: 0
   hasAnimatorControllerEvents: 0
   animationEngine: 0
+--- !u!114 &8347291056382749501
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5654856548892961310}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7c4e9f2a1b8d6e3059471ac2fde8b0c6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: THPerfection3D::KeepAfterDeathAuthoring
 --- !u!1 &5672321091532608401
 GameObject:
   m_ObjectHideFlags: 0

@@ -2,7 +2,8 @@ using UnityEditor;
 using UnityEngine;
 
 /// <summary>
-/// Ensures HitBox and HurtBox layers only collide with each other (not with themselves or Default).
+/// Ensures combat hitbox / hurtbox layers only collide across teams
+/// (HitBox ↔ PlayerHurtBox, PlayerHitBox ↔ HurtBox).
 /// </summary>
 [InitializeOnLoad]
 public static class CombatLayerCollisionSetup
@@ -12,21 +13,23 @@ public static class CombatLayerCollisionSetup
         Apply();
     }
 
-    [MenuItem("THPerfection/Combat/Apply HitBox ↔ HurtBox Layer Matrix")]
+    [MenuItem("THPerfection/Combat/Apply Combat Layer Matrix")]
     public static void ApplyFromMenu() => Apply();
 
     static void Apply()
     {
-        int hurt = CombatLayers.HurtBoxLayer;
-        int hit = CombatLayers.HitBoxLayer;
+        SetLayerCollisions(CombatLayers.HurtBoxLayer, CombatLayers.PlayerHitBoxLayer);
+        SetLayerCollisions(CombatLayers.HitBoxLayer, CombatLayers.PlayerHurtBoxLayer);
+        SetLayerCollisions(CombatLayers.PlayerHurtBoxLayer, CombatLayers.HitBoxLayer);
+        SetLayerCollisions(CombatLayers.PlayerHitBoxLayer, CombatLayers.HurtBoxLayer);
+    }
 
-        if (hurt < 0 || hit < 0)
+    static void SetLayerCollisions(int layer, int collidesWithLayer)
+    {
+        if (layer < 0 || collidesWithLayer < 0)
             return;
 
-        for (int layer = 0; layer < 32; layer++)
-        {
-            Physics.IgnoreLayerCollision(hurt, layer, layer != hit);
-            Physics.IgnoreLayerCollision(hit, layer, layer != hurt);
-        }
+        for (int other = 0; other < 32; other++)
+            Physics.IgnoreLayerCollision(layer, other, other != collidesWithLayer);
     }
 }
