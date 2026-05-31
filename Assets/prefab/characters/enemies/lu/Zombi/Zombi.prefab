@@ -199,7 +199,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: THPerfection3D::HeatSignatureAuthoring
   SignatureType: 1
   Heat: 100
-  Spread: 5
+  Spread: 15
 --- !u!1001 &8988396382521227316
 PrefabInstance:
   m_ObjectHideFlags: 0

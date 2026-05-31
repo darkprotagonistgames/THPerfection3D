@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 7009438782708369002}
   - component: {fileID: 5741555921452746381}
   - component: {fileID: 3335396352910197029}
+  - component: {fileID: 8827364519283746501}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -75,6 +76,20 @@ MonoBehaviour:
   m_EditorClassIdentifier: THPerfection3D::PlayerMovementAuthoring
   acceleration: 200
   maxSpeed: 880
+--- !u!114 &8827364519283746501
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5601796154305430291}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c4a8f1e23b5d6a7093847561c2d3e4f5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: THPerfection3D::CharacterSettings
+  FaceVelocity: 1
+  MinSpeedToRotate: 0.1
 --- !u!1001 &1592517514202905303
 PrefabInstance:
   m_ObjectHideFlags: 0

@@ -40,7 +40,10 @@ public class PlayerTransformSync : MonoBehaviour
         // Read the first (and only) player entity's LocalTransform.
         LocalTransform playerTransform = _playerQuery.GetSingleton<LocalTransform>();
         float3 position = playerTransform.Position;
-        transform.position = new Vector3(position.x, position.y, position.z);
+        quaternion rotation = playerTransform.Rotation;
+        transform.SetPositionAndRotation(
+            new Vector3(position.x, position.y, position.z),
+            new Quaternion(rotation.value.x, rotation.value.y, rotation.value.z, rotation.value.w));
     }
 
     private void OnDestroy()

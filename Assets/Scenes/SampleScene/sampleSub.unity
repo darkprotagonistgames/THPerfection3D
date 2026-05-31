@@ -244,8 +244,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: THPerfection3D::SafeRandomSpawner
   Prefab: {fileID: 7470503837719594817, guid: 4bab069a7b4a0bc4c92144e55ae52516, type: 3}
   BoundsMin: {x: -500, y: -500}
-  BoundsMax: {x: -500, y: 500}
-  SpawnCount: 50
+  BoundsMax: {x: 5000, y: 5000}
+  SpawnCount: 20
   FootprintRadius: 0.5
   MaxPushAttempts: 20
   RandomSeed: 0
