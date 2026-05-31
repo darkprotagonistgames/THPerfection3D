@@ -1,0 +1,17 @@
+---
+description: Run Unity MCP tools sequentially; parallel calls are not supported
+alwaysApply: true
+---
+
+# Unity MCP — sequential calls only
+
+The Unity MCP server (`user-unity-mcp`) does **not** support parallel tool calls.
+
+When using Unity MCP:
+
+- Issue **exactly one** `CallMcpTool` to `user-unity-mcp` per assistant turn.
+- Wait for that call to finish before issuing the next Unity MCP call.
+- Do **not** batch multiple Unity MCP tools in the same message, even when they are independent.
+- Other tools (grep, read, shell, non-Unity MCP servers) may still run in parallel with a single Unity MCP call.
+
+If a task needs several Unity operations, run them one at a time across multiple turns.
