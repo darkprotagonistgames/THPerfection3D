@@ -1,7 +1,9 @@
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
+using Unity.Physics;
 using UnityEngine;
+using PhysicsCollider = Unity.Physics.Collider;
 
 /// <summary>
 /// Authoring component. Place inside a subscene to scatter entity prefabs across a
@@ -11,7 +13,7 @@ using UnityEngine;
 public class SafeRandomSpawner : MonoBehaviour
 {
     [Header("Prefab")]
-    [Tooltip("The entity prefab to spawn.")]
+    [Tooltip("The entity prefab to spawn. Must contain SphereCollider children on the spawnFootprint layer.")]
     public GameObject Prefab;
 
     [Header("Spawn Area (XZ)")]
@@ -20,9 +22,6 @@ public class SafeRandomSpawner : MonoBehaviour
 
     [Header("Spawn Settings")]
     [Min(1)] public int SpawnCount = 10;
-
-    [Tooltip("Minimum separation radius between spawns and static colliders.")]
-    [Min(0.01f)] public float FootprintRadius = 0.5f;
 
     [Tooltip("Max pushes per spawn before it is discarded.")]
     [Min(1)] public int MaxPushAttempts = 20;
@@ -34,18 +33,30 @@ public class SafeRandomSpawner : MonoBehaviour
     {
         public override void Bake(SafeRandomSpawner authoring)
         {
+            SpawnPlacementUtils.FootprintCollection footprints =
+                SpawnPlacementUtils.CollectFootprints(authoring.Prefab);
+
+            if (footprints.Spheres.Length == 0)
+            {
+                Debug.LogWarning(
+                    $"[SafeRandomSpawner] Prefab '{authoring.Prefab.name}' has no spawn footprint SphereColliders on the spawnFootprint layer.",
+                    authoring);
+            }
+
+            BlobAssetReference<PhysicsCollider> footprintCollider =
+                SpawnPlacementUtils.CreateFootprintPhysicsCollider(footprints);
+
             using var builder = new BlobBuilder(Allocator.Temp);
             ref SpawnConfigBlob root = ref builder.ConstructRoot<SpawnConfigBlob>();
 
-            root.BoundsMin       = authoring.BoundsMin;
-            root.BoundsMax       = authoring.BoundsMax;
-            root.SpawnGroundY    = authoring.transform.position.y;
-            root.FootprintRadius = authoring.FootprintRadius;
-            root.SpawnCount      = authoring.SpawnCount;
-            root.MaxPushAttempts = authoring.MaxPushAttempts;
+            root.BoundsMin          = authoring.BoundsMin;
+            root.BoundsMax          = authoring.BoundsMax;
+            root.SpawnGroundY       = authoring.transform.position.y;
+            root.FootprintLayerMask = footprints.LayerMask;
+            root.PushStepDistance   = SpawnPlacementUtils.ComputePushStepDistance(footprintCollider);
+            root.SpawnCount         = authoring.SpawnCount;
+            root.MaxPushAttempts    = authoring.MaxPushAttempts;
 
-            // Auto-seed: hash bounds + count so two spawners with different configs
-            // get different distributions without needing manual seed assignment.
             root.Seed = authoring.RandomSeed != 0
                 ? authoring.RandomSeed
                 : (uint)math.hash(new float4(
@@ -53,15 +64,17 @@ public class SafeRandomSpawner : MonoBehaviour
                     authoring.BoundsMax.x, authoring.SpawnCount));
 
             var blobRef = builder.CreateBlobAssetReference<SpawnConfigBlob>(Allocator.Persistent);
-
-            // AddBlobAsset hashes the asset so identical configs share one allocation.
             AddBlobAsset(ref blobRef, out _);
+
+            if (footprintCollider.IsCreated)
+                AddBlobAsset(ref footprintCollider, out _);
 
             Entity entity = GetEntity(TransformUsageFlags.None);
             AddComponent(entity, new SafeRandomSpawnerData
             {
-                EntityPrefab = GetEntity(authoring.Prefab, TransformUsageFlags.Dynamic),
-                Config       = blobRef,
+                EntityPrefab       = GetEntity(authoring.Prefab, TransformUsageFlags.Dynamic),
+                Config             = blobRef,
+                FootprintCollider  = footprintCollider,
             });
         }
     }
@@ -73,7 +86,8 @@ public struct SpawnConfigBlob
     public float2 BoundsMin;
     public float2 BoundsMax;
     public float  SpawnGroundY;
-    public float  FootprintRadius;
+    public float  PushStepDistance;
+    public uint   FootprintLayerMask;
     public int    SpawnCount;
     public int    MaxPushAttempts;
     public uint   Seed;
@@ -81,9 +95,7 @@ public struct SpawnConfigBlob
 
 public struct SafeRandomSpawnerData : IComponentData
 {
-    /// <summary>Entity prefab instantiated for each confirmed spawn position.</summary>
     public Entity EntityPrefab;
-
-    /// <summary>Blob reference to the shared spawn configuration.</summary>
     public BlobAssetReference<SpawnConfigBlob> Config;
+    public BlobAssetReference<PhysicsCollider> FootprintCollider;
 }

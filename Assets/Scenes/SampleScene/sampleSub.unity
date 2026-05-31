@@ -246,7 +246,6 @@ MonoBehaviour:
   BoundsMin: {x: -500, y: -500}
   BoundsMax: {x: 5000, y: 5000}
   SpawnCount: 20
-  FootprintRadius: 0.5
   MaxPushAttempts: 20
   RandomSeed: 0
 --- !u!4 &1521495406

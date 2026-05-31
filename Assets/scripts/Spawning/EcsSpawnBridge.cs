@@ -21,7 +21,7 @@ public class EcsSpawnBridge : MonoBehaviour
 
     private EntityManager _entityManager;
     private Entity        _singletonEntity;
-    private Dictionary<int, SpawnPlacementUtils.FootprintSphere[]> _footprintCache;
+    private Dictionary<int, SpawnPlacementUtils.FootprintCollection> _footprintCache;
 
     private void Awake()
     {
@@ -35,7 +35,7 @@ public class EcsSpawnBridge : MonoBehaviour
 
         _entityManager   = World.DefaultGameObjectInjectionWorld.EntityManager;
         _singletonEntity = _entityManager.CreateSingletonBuffer<SpawnRequest>();
-        _footprintCache  = new Dictionary<int, SpawnPlacementUtils.FootprintSphere[]>();
+        _footprintCache  = new Dictionary<int, SpawnPlacementUtils.FootprintCollection>();
     }
 
     private void Update()
@@ -55,7 +55,7 @@ public class EcsSpawnBridge : MonoBehaviour
                 continue;
             }
 
-            SpawnPlacementUtils.FootprintSphere[] footprints = GetOrBuildFootprints(req.PrefabIndex);
+            SpawnPlacementUtils.FootprintCollection footprints = GetOrBuildFootprints(req.PrefabIndex);
 
             if (SpawnPlacementUtils.TryFindPositionAround(footprints, (Vector3)req.OriginPosition, req.SearchRadius, MaxAttempts, out Vector3 pos))
             {
@@ -85,7 +85,7 @@ public class EcsSpawnBridge : MonoBehaviour
         });
     }
 
-    private SpawnPlacementUtils.FootprintSphere[] GetOrBuildFootprints(int prefabIndex)
+    private SpawnPlacementUtils.FootprintCollection GetOrBuildFootprints(int prefabIndex)
     {
         if (!_footprintCache.TryGetValue(prefabIndex, out var footprints))
         {
