@@ -74,8 +74,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 584cb15c89b2dde43b0168497c15cd1d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: THPerfection3D::PlayerMovementAuthoring
-  acceleration: 200
-  maxSpeed: 880
+  acceleration: 500
+  maxSpeed: 250
 --- !u!114 &8827364519283746501
 MonoBehaviour:
   m_ObjectHideFlags: 0

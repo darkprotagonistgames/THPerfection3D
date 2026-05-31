@@ -36,7 +36,7 @@ public partial struct FaceVelocityRotationSystem : ISystem
             in PhysicsVelocity physicsVelocity,
             in FaceVelocityRotation settings)
         {
-            float2 velocityXZ = TopDownPlane.FromPosition(physicsVelocity.Linear);
+            float2 velocityXZ = TopDownPlane.FromPosition(physicsVelocity.Linear) * -1;
             if (math.lengthsq(velocityXZ) < settings.MinSpeedSq)
                 return;
 
