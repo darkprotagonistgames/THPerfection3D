@@ -1,125 +1,77 @@
-using Unity.Collections;
-using Unity.Entities;
 using Unity.Mathematics;
-using Unity.Physics;
 using UnityEngine;
-using PhysicsCollider = Unity.Physics.Collider;
-using PhysicsSphereCollider = Unity.Physics.SphereCollider;
 
 /// <summary>
-/// Shared utility methods used by SafeRandomSpawner and EcsSpawnBridge to find
-/// overlap-free placement positions using physics collider queries.
+/// Managed spawn placement helpers for EcsSpawnBridge using Physics.CheckSphere
+/// against the spawnProtection layer.
 /// </summary>
 public static class SpawnPlacementUtils
 {
-    public struct FootprintSphere
+    public struct ProtectionSphere
     {
         public Vector3 LocalOffset;
         public float   Radius;
     }
 
-    public struct FootprintCollection
+    public struct ProtectionCollection
     {
-        public FootprintSphere[] Spheres;
-        public uint              LayerMask;
+        public ProtectionSphere[] Spheres;
+        public uint               LayerMask;
     }
 
     /// <summary>
-    /// Collects all SphereColliders on the spawnFootprint layer from the prefab hierarchy.
-    /// LayerMask is derived from each collider's GameObject layer.
+    /// Collects spawnProtection colliders from the prefab hierarchy.
     /// </summary>
-    public static FootprintCollection CollectFootprints(GameObject prefab)
+    public static ProtectionCollection CollectProtection(GameObject prefab)
     {
-        var colliders = prefab.GetComponentsInChildren<UnityEngine.SphereCollider>(true);
-        int spawnFootprintLayer = (int)Layers.spawnFootprint;
+        var colliders = prefab.GetComponentsInChildren<UnityEngine.Collider>(true);
+        int layer = (int)Layers.spawnProtection;
 
         int count = 0;
         foreach (var col in colliders)
         {
-            if (col.gameObject.layer == spawnFootprintLayer)
+            if (col.gameObject.layer == layer)
                 count++;
         }
 
-        var spheres = new FootprintSphere[count];
-        uint layerMask = 0;
+        var spheres = new ProtectionSphere[count];
         int index = 0;
         foreach (var col in colliders)
         {
-            if (col.gameObject.layer != spawnFootprintLayer)
+            if (col.gameObject.layer != layer)
                 continue;
 
-            layerMask |= 1u << col.gameObject.layer;
-            spheres[index++] = new FootprintSphere
+            if (col is UnityEngine.SphereCollider sphere)
             {
-                LocalOffset = col.center,
-                Radius      = col.radius * col.transform.lossyScale.x,
-            };
-        }
-
-        return new FootprintCollection
-        {
-            Spheres   = spheres,
-            LayerMask = layerMask,
-        };
-    }
-
-    /// <summary>
-    /// Builds a Unity Physics collider blob from collected footprint spheres.
-    /// </summary>
-    public static BlobAssetReference<PhysicsCollider> CreateFootprintPhysicsCollider(FootprintCollection footprints)
-    {
-        if (footprints.Spheres.Length == 0)
-            return default;
-
-        var filter = new CollisionFilter
-        {
-            BelongsTo    = footprints.LayerMask,
-            CollidesWith = footprints.LayerMask,
-        };
-
-        if (footprints.Spheres.Length == 1)
-        {
-            FootprintSphere sphere = footprints.Spheres[0];
-            return PhysicsSphereCollider.Create(
-                new SphereGeometry
+                spheres[index++] = new ProtectionSphere
                 {
-                    Center = (float3)sphere.LocalOffset,
-                    Radius = sphere.Radius,
-                },
-                filter);
-        }
-
-        var instances = new NativeArray<CompoundCollider.ColliderBlobInstance>(
-            footprints.Spheres.Length, Allocator.Temp);
-        try
-        {
-            for (int i = 0; i < footprints.Spheres.Length; i++)
-            {
-                FootprintSphere sphere = footprints.Spheres[i];
-                instances[i] = new CompoundCollider.ColliderBlobInstance
-                {
-                    Collider = PhysicsSphereCollider.Create(
-                        new SphereGeometry { Center = float3.zero, Radius = sphere.Radius },
-                        CollisionFilter.Default),
-                    CompoundFromChild = new RigidTransform(quaternion.identity, (float3)sphere.LocalOffset),
+                    LocalOffset = sphere.center,
+                    Radius      = sphere.radius * sphere.transform.lossyScale.x,
                 };
             }
+            else
+            {
+                Bounds bounds = col.bounds;
+                Vector3 localCenter = prefab.transform.InverseTransformPoint(bounds.center);
+                spheres[index++] = new ProtectionSphere
+                {
+                    LocalOffset = localCenter,
+                    Radius      = math.max(bounds.extents.x, bounds.extents.z),
+                };
+            }
+        }
 
-            return CompoundCollider.Create(instances);
-        }
-        finally
+        return new ProtectionCollection
         {
-            instances.Dispose();
-        }
+            Spheres   = spheres,
+            LayerMask = SpawnProtection.LayerMask,
+        };
     }
 
-    /// <summary>
-    /// Push distance used when nudging a rejected candidate — twice the largest footprint reach.
-    /// </summary>
-    public static float ComputePushStepDistance(FootprintSphere[] footprints)
+    public static float ComputePushStepDistance(ProtectionSphere[] spheres)
     {
         float maxExtent = 0.01f;
-        foreach (var sphere in footprints)
+        foreach (var sphere in spheres)
         {
             float extent = sphere.LocalOffset.magnitude + sphere.Radius;
             if (extent > maxExtent)
@@ -129,26 +81,8 @@ public static class SpawnPlacementUtils
         return maxExtent * 2f;
     }
 
-    /// <summary>
-    /// Push distance from a baked physics collider blob.
-    /// </summary>
-    public static float ComputePushStepDistance(BlobAssetReference<PhysicsCollider> footprintCollider)
-    {
-        if (!footprintCollider.IsCreated)
-            return 1f;
-
-        Aabb  aabb    = footprintCollider.Value.CalculateAabb(RigidTransform.identity);
-        float extentX = aabb.Max.x - aabb.Min.x;
-        float extentZ = aabb.Max.z - aabb.Min.z;
-        return math.max(extentX, extentZ);
-    }
-
-    /// <summary>
-    /// Tries up to maxAttempts times to find a position within [minX,maxX] x [minZ,maxZ]
-    /// on the ground plane where the footprint collider does not overlap anything.
-    /// </summary>
     public static bool TryFindPosition(
-        FootprintCollection footprints,
+        ProtectionCollection protection,
         float minX, float maxX,
         float minZ, float maxZ,
         float spawnY,
@@ -162,7 +96,7 @@ public static class SpawnPlacementUtils
                 spawnY,
                 UnityEngine.Random.Range(minZ, maxZ));
 
-            if (IsPositionClear(footprints, candidate))
+            if (IsPositionClear(protection, candidate))
             {
                 result = candidate;
                 return true;
@@ -173,12 +107,8 @@ public static class SpawnPlacementUtils
         return false;
     }
 
-    /// <summary>
-    /// Variant that samples within a circle of searchRadius around origin.
-    /// Used by EcsSpawnBridge for enemy-triggered spawns.
-    /// </summary>
     public static bool TryFindPositionAround(
-        FootprintCollection footprints,
+        ProtectionCollection protection,
         Vector3 origin,
         float searchRadius,
         int maxAttempts,
@@ -189,7 +119,7 @@ public static class SpawnPlacementUtils
             Vector2 offset    = UnityEngine.Random.insideUnitCircle * searchRadius;
             var     candidate = new Vector3(origin.x + offset.x, origin.y, origin.z + offset.y);
 
-            if (IsPositionClear(footprints, candidate))
+            if (IsPositionClear(protection, candidate))
             {
                 result = candidate;
                 return true;
@@ -201,19 +131,18 @@ public static class SpawnPlacementUtils
     }
 
     /// <summary>
-    /// Destroys every child GameObject that lives on the spawnFootprint layer.
-    /// Call this immediately after Instantiate to prevent footprint colliders from
-    /// being baked into ECS entities.
+    /// Destroys spawnProtection child objects after GameObject.Instantiate so they
+    /// are not left in the live scene hierarchy.
     /// </summary>
-    public static void RemoveSpawnFootprints(GameObject instance)
+    public static void RemoveSpawnProtection(GameObject instance)
     {
-        int spawnFootprintLayer = (int)Layers.spawnFootprint;
+        int layer = (int)Layers.spawnProtection;
         var allTransforms = instance.GetComponentsInChildren<Transform>(true);
 
         var toDestroy = new System.Collections.Generic.List<GameObject>();
         foreach (Transform t in allTransforms)
         {
-            if (t.gameObject.layer == spawnFootprintLayer && t.gameObject != instance)
+            if (t.gameObject.layer == layer && t.gameObject != instance)
                 toDestroy.Add(t.gameObject);
         }
 
@@ -224,12 +153,12 @@ public static class SpawnPlacementUtils
         }
     }
 
-    private static bool IsPositionClear(FootprintCollection footprints, Vector3 candidate)
+    private static bool IsPositionClear(ProtectionCollection protection, Vector3 candidate)
     {
-        foreach (var sphere in footprints.Spheres)
+        foreach (var sphere in protection.Spheres)
         {
             Vector3 worldPos = candidate + sphere.LocalOffset;
-            if (Physics.CheckSphere(worldPos, sphere.Radius, (int)footprints.LayerMask, QueryTriggerInteraction.Collide))
+            if (Physics.CheckSphere(worldPos, sphere.Radius, (int)protection.LayerMask, QueryTriggerInteraction.Collide))
                 return false;
         }
 

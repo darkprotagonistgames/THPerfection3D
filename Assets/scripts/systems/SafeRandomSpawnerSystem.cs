@@ -3,15 +3,20 @@ using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Physics;
 using Unity.Transforms;
-using PhysicsCollider = Unity.Physics.Collider;
 
 /// <summary>
-/// Spawner for the XZ ground plane. Runs early in simulation so the physics world
-/// is ready (Init group may finish before PhysicsWorldSingleton exists).
+/// Spawner for the XZ ground plane. Uses spawnProtection sphere geometry and the
+/// layer matrix (spawnProtection collides only with spawnProtection).
 /// </summary>
 [UpdateInGroup(typeof(SimulationSystemGroup), OrderFirst = true)]
 public partial struct SafeRandomSpawnerSystem : ISystem
 {
+    private static readonly CollisionFilter ProtectionFilter = new()
+    {
+        BelongsTo    = SpawnProtection.LayerMask,
+        CollidesWith = SpawnProtection.LayerMask,
+    };
+
     public void OnCreate(ref SystemState state)
     {
         state.RequireForUpdate<SafeRandomSpawnerData>();
@@ -28,8 +33,11 @@ public partial struct SafeRandomSpawnerSystem : ISystem
                  SystemAPI.Query<RefRO<SafeRandomSpawnerData>>().WithEntityAccess())
         {
             ref SpawnConfigBlob config = ref spawner.ValueRO.Config.Value;
-            BlobAssetReference<PhysicsCollider> footprintCollider = spawner.ValueRO.FootprintCollider;
-            Entity prefab = spawner.ValueRO.EntityPrefab;
+
+            if (config.ProtectionSpheres.Length == 0)
+                continue;
+
+            float pushStep = ComputePushStepDistance(ref config);
 
             var rng       = new Random(config.Seed);
             var confirmed = new NativeList<float3>(config.SpawnCount, Allocator.Temp);
@@ -47,12 +55,12 @@ public partial struct SafeRandomSpawnerSystem : ISystem
                     if (push > 0)
                     {
                         float2 dir = rng.NextFloat2Direction();
-                        candidate += new float3(dir.x, 0f, dir.y) * config.PushStepDistance;
+                        candidate += new float3(dir.x, 0f, dir.y) * pushStep;
                         candidate.x = math.clamp(candidate.x, config.BoundsMin.x, config.BoundsMax.x);
                         candidate.z = math.clamp(candidate.z, config.BoundsMin.y, config.BoundsMax.y);
                     }
 
-                    if (!OverlapsAnything(in physicsWorld, in candidate, ref config, footprintCollider, in confirmed))
+                    if (!OverlapsAnything(in physicsWorld, in candidate, ref config, in confirmed))
                     {
                         placed = true;
                         break;
@@ -65,7 +73,7 @@ public partial struct SafeRandomSpawnerSystem : ISystem
 
             for (int i = 0; i < confirmed.Length; i++)
             {
-                Entity spawned = ecb.Instantiate(prefab);
+                Entity spawned = ecb.Instantiate(spawner.ValueRO.EntityPrefab);
                 ecb.SetComponent(spawned, LocalTransform.FromPosition(confirmed[i]));
             }
 
@@ -81,18 +89,14 @@ public partial struct SafeRandomSpawnerSystem : ISystem
         in PhysicsWorldSingleton physicsWorld,
         in float3 position,
         ref SpawnConfigBlob config,
-        BlobAssetReference<PhysicsCollider> footprintCollider,
         in NativeList<float3> confirmed)
     {
-        if (!footprintCollider.IsCreated)
-            return false;
-
-        if (OverlapsPhysicsWorld(in physicsWorld, in position, ref config, footprintCollider))
+        if (OverlapsPhysicsWorld(in physicsWorld, in position, ref config))
             return true;
 
         for (int i = 0; i < confirmed.Length; i++)
         {
-            if (FootprintsOverlap(in position, confirmed[i], footprintCollider))
+            if (ProtectionOverlaps(in position, confirmed[i], ref config))
                 return true;
         }
 
@@ -102,30 +106,67 @@ public partial struct SafeRandomSpawnerSystem : ISystem
     private static bool OverlapsPhysicsWorld(
         in PhysicsWorldSingleton physicsWorld,
         in float3 position,
-        ref SpawnConfigBlob config,
-        BlobAssetReference<PhysicsCollider> footprintCollider)
+        ref SpawnConfigBlob config)
     {
-        if (config.FootprintLayerMask == 0)
-            return false;
+        var hits = new NativeList<DistanceHit>(Allocator.Temp);
 
-        var input = new ColliderDistanceInput(
-            footprintCollider,
-            0f,
-            new RigidTransform(quaternion.identity, position));
+        for (int i = 0; i < config.ProtectionSpheres.Length; i++)
+        {
+            ref SpawnProtectionSphereBlob sphere = ref config.ProtectionSpheres[i];
+            float3 worldPos = position + sphere.LocalOffset;
 
-        return physicsWorld.CalculateDistance(input);
+            hits.Clear();
+            if (physicsWorld.OverlapSphere(
+                    worldPos,
+                    sphere.Radius,
+                    ref hits,
+                    ProtectionFilter,
+                    QueryInteraction.Default))
+            {
+                hits.Dispose();
+                return true;
+            }
+        }
+
+        hits.Dispose();
+        return false;
     }
 
-    private static bool FootprintsOverlap(
+    private static bool ProtectionOverlaps(
         in float3 positionA,
         in float3 positionB,
-        BlobAssetReference<PhysicsCollider> footprintCollider)
+        ref SpawnConfigBlob config)
     {
-        RigidTransform transformA = new RigidTransform(quaternion.identity, positionA);
-        RigidTransform transformB = new RigidTransform(quaternion.identity, positionB);
-        RigidTransform bInA       = math.mul(math.inverse(transformA), transformB);
+        for (int i = 0; i < config.ProtectionSpheres.Length; i++)
+        {
+            ref SpawnProtectionSphereBlob sphereA = ref config.ProtectionSpheres[i];
+            float3 centerA = positionA + sphereA.LocalOffset;
 
-        var input = new ColliderDistanceInput(footprintCollider, 0f, bInA);
-        return footprintCollider.Value.CalculateDistance(input);
+            for (int j = 0; j < config.ProtectionSpheres.Length; j++)
+            {
+                ref SpawnProtectionSphereBlob sphereB = ref config.ProtectionSpheres[j];
+                float3 centerB = positionB + sphereB.LocalOffset;
+
+                float minDistance = sphereA.Radius + sphereB.Radius;
+                if (math.distancesq(centerA, centerB) < minDistance * minDistance)
+                    return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static float ComputePushStepDistance(ref SpawnConfigBlob config)
+    {
+        float maxExtent = 0.01f;
+
+        for (int i = 0; i < config.ProtectionSpheres.Length; i++)
+        {
+            ref SpawnProtectionSphereBlob sphere = ref config.ProtectionSpheres[i];
+            float extent = math.length(sphere.LocalOffset) + sphere.Radius;
+            maxExtent = math.max(maxExtent, extent);
+        }
+
+        return maxExtent * 2f;
     }
 }

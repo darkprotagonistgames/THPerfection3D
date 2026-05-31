@@ -123,8 +123,8 @@ GameObject:
   m_Component:
   - component: {fileID: 8347291056382749121}
   - component: {fileID: 8347291056382749122}
-  m_Layer: 3
-  m_Name: SpawnFootprint
+  m_Layer: 7
+  m_Name: spawnProtection
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

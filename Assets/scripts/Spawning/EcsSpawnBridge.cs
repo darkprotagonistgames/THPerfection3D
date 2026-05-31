@@ -5,9 +5,7 @@ using UnityEngine;
 /// <summary>
 /// Singleton MonoBehaviour that owns the SpawnRequest singleton buffer entity.
 /// Processes all queued requests each Update frame using safe placement logic,
-/// and caches per-prefab footprints to avoid repeated hierarchy traversal.
-/// ECS systems push SpawnRequest elements into the buffer; this bridge instantiates
-/// the corresponding managed prefabs using Physics.CheckSphere overlap checks.
+/// and caches per-prefab protection colliders to avoid repeated hierarchy traversal.
 /// </summary>
 public class EcsSpawnBridge : MonoBehaviour
 {
@@ -21,7 +19,7 @@ public class EcsSpawnBridge : MonoBehaviour
 
     private EntityManager _entityManager;
     private Entity        _singletonEntity;
-    private Dictionary<int, SpawnPlacementUtils.FootprintCollection> _footprintCache;
+    private Dictionary<int, SpawnPlacementUtils.ProtectionCollection> _protectionCache;
 
     private void Awake()
     {
@@ -35,7 +33,7 @@ public class EcsSpawnBridge : MonoBehaviour
 
         _entityManager   = World.DefaultGameObjectInjectionWorld.EntityManager;
         _singletonEntity = _entityManager.CreateSingletonBuffer<SpawnRequest>();
-        _footprintCache  = new Dictionary<int, SpawnPlacementUtils.FootprintCollection>();
+        _protectionCache = new Dictionary<int, SpawnPlacementUtils.ProtectionCollection>();
     }
 
     private void Update()
@@ -55,26 +53,22 @@ public class EcsSpawnBridge : MonoBehaviour
                 continue;
             }
 
-            SpawnPlacementUtils.FootprintCollection footprints = GetOrBuildFootprints(req.PrefabIndex);
+            SpawnPlacementUtils.ProtectionCollection protection = GetOrBuildProtection(req.PrefabIndex);
 
-            if (SpawnPlacementUtils.TryFindPositionAround(footprints, (Vector3)req.OriginPosition, req.SearchRadius, MaxAttempts, out Vector3 pos))
+            if (SpawnPlacementUtils.TryFindPositionAround(protection, (Vector3)req.OriginPosition, req.SearchRadius, MaxAttempts, out Vector3 pos))
             {
                 GameObject instance = Instantiate(RegisteredPrefabs[req.PrefabIndex], pos, Quaternion.identity);
-                SpawnPlacementUtils.RemoveSpawnFootprints(instance);
+                SpawnPlacementUtils.RemoveSpawnProtection(instance);
             }
             else
             {
                 Debug.LogError($"[EcsSpawnBridge] Failed to find a safe position for prefab index {req.PrefabIndex} after {MaxAttempts} attempts.");
-                // TODO: Required spawns must never be silently dropped — add escalation or fallback here.
             }
         }
 
         buffer.Clear();
     }
 
-    /// <summary>
-    /// Pushes a SpawnRequest into the singleton buffer from managed code.
-    /// </summary>
     public void RequestSpawn(int prefabIndex, Vector3 origin, float searchRadius)
     {
         _entityManager.GetBuffer<SpawnRequest>(_singletonEntity).Add(new SpawnRequest
@@ -85,13 +79,14 @@ public class EcsSpawnBridge : MonoBehaviour
         });
     }
 
-    private SpawnPlacementUtils.FootprintCollection GetOrBuildFootprints(int prefabIndex)
+    private SpawnPlacementUtils.ProtectionCollection GetOrBuildProtection(int prefabIndex)
     {
-        if (!_footprintCache.TryGetValue(prefabIndex, out var footprints))
+        if (!_protectionCache.TryGetValue(prefabIndex, out var protection))
         {
-            footprints = SpawnPlacementUtils.CollectFootprints(RegisteredPrefabs[prefabIndex]);
-            _footprintCache[prefabIndex] = footprints;
+            protection = SpawnPlacementUtils.CollectProtection(RegisteredPrefabs[prefabIndex]);
+            _protectionCache[prefabIndex] = protection;
         }
-        return footprints;
+
+        return protection;
     }
 }
