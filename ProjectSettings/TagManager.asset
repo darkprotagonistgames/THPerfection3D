@@ -8,10 +8,11 @@ TagManager:
   - Default
   - TransparentFX
   - Ignore Raycast
-  - 
+  - spawnFootprint
   - Water
   - UI
   - 
+  - spawnProtection
   - 
   - 
   - 

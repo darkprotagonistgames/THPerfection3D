@@ -1,0 +1,21 @@
+{
+    "name": "THPerfection.GeneratedEvents.Editor",
+    "rootNamespace": "",
+    "references": [
+        "THPerfection.GeneratedEvents",
+        "Unity.Entities",
+        "Unity.Collections",
+        "UnityEditor"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
