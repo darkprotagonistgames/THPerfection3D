@@ -22,6 +22,15 @@ public struct RadarRendererConfig : IComponentData
 
     /// <summary>B channel of the hottest-pixel color.</summary>
     public float TargetColorB;
+
+    /// <summary>World XZ center mapped to the middle of the radar texture.</summary>
+    public float2 WorldCenterXZ;
+
+    /// <summary>
+    /// Half-size of the square world region shown on radar.
+    /// Positions in [center - extent, center + extent] on X and Z fill the texture.
+    /// </summary>
+    public float WorldHalfExtent;
 }
 
 /// <summary>
@@ -52,6 +61,12 @@ public class RadarConfigAuthoring : MonoBehaviour
     [Tooltip("Which heat-signature types are rendered. Default: everything.")]
     public HeatSignatureType FilterFlags = HeatSignatureType.Monster | HeatSignatureType.Treasure;
 
+    [Tooltip("World XZ center shown at the middle of the radar.")]
+    public Vector2 WorldCenterXZ = Vector2.zero;
+
+    [Tooltip("Half-size of the square region mapped to the radar (world units on X and Z).")]
+    public float WorldHalfExtent = 60f;
+
     public class Baker : Baker<RadarConfigAuthoring>
     {
         public override void Bake(RadarConfigAuthoring authoring)
@@ -59,11 +74,13 @@ public class RadarConfigAuthoring : MonoBehaviour
             Entity entity = GetEntity(TransformUsageFlags.None);
             AddComponent(entity, new RadarRendererConfig
             {
-                FilterFlags   = authoring.FilterFlags,
-                MapSizePixels = math.max(1, authoring.MapSizePixels),
-                TargetColorR  = authoring.TargetColor.r,
-                TargetColorG  = authoring.TargetColor.g,
-                TargetColorB  = authoring.TargetColor.b,
+                FilterFlags     = authoring.FilterFlags,
+                MapSizePixels   = math.max(1, authoring.MapSizePixels),
+                TargetColorR    = authoring.TargetColor.r,
+                TargetColorG    = authoring.TargetColor.g,
+                TargetColorB    = authoring.TargetColor.b,
+                WorldCenterXZ   = authoring.WorldCenterXZ,
+                WorldHalfExtent = math.max(1f, authoring.WorldHalfExtent),
             });
         }
     }

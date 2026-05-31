@@ -1,4 +1,3 @@
-using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
@@ -6,34 +5,34 @@ using Unity.Physics;
 using Unity.Transforms;
 
 /// <summary>
-/// Burst-compiled spawner for the XZ ground plane. BoundsMin/BoundsMax are X and Z extents.
+/// Spawner for the XZ ground plane. Runs early in simulation so the physics world
+/// is ready (Init group may finish before PhysicsWorldSingleton exists).
 /// </summary>
-[BurstCompile]
-[UpdateInGroup(typeof(InitializationSystemGroup))]
+[UpdateInGroup(typeof(SimulationSystemGroup), OrderFirst = true)]
 public partial struct SafeRandomSpawnerSystem : ISystem
 {
-    [BurstCompile]
+    // Layers.spawnFootprint = 3
+    private const uint SpawnFootprintLayerMask = 1u << 3;
+
     public void OnCreate(ref SystemState state)
     {
         state.RequireForUpdate<SafeRandomSpawnerData>();
-        state.RequireForUpdate<PhysicsWorldSingleton>();
     }
 
-    [BurstCompile]
     public void OnUpdate(ref SystemState state)
     {
-        var physicsWorld = SystemAPI.GetSingleton<PhysicsWorldSingleton>();
+        if (!SystemAPI.TryGetSingleton(out PhysicsWorldSingleton physicsWorld))
+            return;
 
-        var ecb = SystemAPI.GetSingleton<BeginInitializationEntityCommandBufferSystem.Singleton>()
-                           .CreateCommandBuffer(state.WorldUnmanaged);
+        var ecb = new EntityCommandBuffer(Allocator.Temp);
 
         foreach (var (spawner, spawnerEntity) in
-            SystemAPI.Query<RefRO<SafeRandomSpawnerData>>().WithEntityAccess())
+                 SystemAPI.Query<RefRO<SafeRandomSpawnerData>>().WithEntityAccess())
         {
             ref readonly SpawnConfigBlob config = ref spawner.ValueRO.Config.Value;
             Entity prefab = spawner.ValueRO.EntityPrefab;
 
-            var rng = new Random(config.Seed);
+            var rng       = new Random(config.Seed);
             var confirmed = new NativeList<float3>(config.SpawnCount, Allocator.Temp);
 
             for (int i = 0; i < config.SpawnCount; i++)
@@ -74,20 +73,27 @@ public partial struct SafeRandomSpawnerSystem : ISystem
             confirmed.Dispose();
             ecb.RemoveComponent<SafeRandomSpawnerData>(spawnerEntity);
         }
+
+        ecb.Playback(state.EntityManager);
+        ecb.Dispose();
     }
 
-    [BurstCompile]
     private static bool OverlapsAnything(
         in PhysicsWorldSingleton physicsWorld,
         in float3 position,
         float radius,
         in NativeList<float3> confirmed)
     {
+        // Only check spawnFootprint colliders — not the ground mesh (Default layer).
         var query = new PointDistanceInput
         {
-            Position = position,
+            Position    = position,
             MaxDistance = radius,
-            Filter = CollisionFilter.Default,
+            Filter      = new CollisionFilter
+            {
+                BelongsTo    = ~0u,
+                CollidesWith = SpawnFootprintLayerMask,
+            },
         };
 
         if (physicsWorld.CalculateDistance(query))

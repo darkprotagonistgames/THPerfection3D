@@ -59,9 +59,10 @@ public partial class RadarRendererSystem : SystemBase
             if ((data.SignatureType & config.FilterFlags) == 0)
                 continue;
 
-            // World → pixel space. World origin is at (0,0), world extents = worldSize.
-            float normalizedX = (float)(transform.Position.x / WorldParams.worldSize);
-            float normalizedZ = (float)(transform.Position.z / WorldParams.worldSize);
+            // Map world XZ into [0, mapSize). Default config covers roughly ±WorldHalfExtent around center.
+            float extent = math.max(config.WorldHalfExtent, 1f);
+            float normalizedX = (transform.Position.x - config.WorldCenterXZ.x + extent) / (2f * extent);
+            float normalizedZ = (transform.Position.z - config.WorldCenterXZ.y + extent) / (2f * extent);
             int centerX = math.clamp((int)(normalizedX * mapSize), 0, mapSize - 1);
             int centerY = math.clamp((int)(normalizedZ * mapSize), 0, mapSize - 1);
 

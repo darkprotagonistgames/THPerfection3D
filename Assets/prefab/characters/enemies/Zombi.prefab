@@ -188,7 +188,7 @@ CapsuleCollider:
   m_LayerOverridePriority: 0
   m_IsTrigger: 0
   m_ProvidesContacts: 0
-  m_Enabled: 0
+  m_Enabled: 1
   serializedVersion: 2
   m_Radius: 0.4
   m_Height: 2
@@ -223,7 +223,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: THPerfection3D::HeatSignatureAuthoring
   SignatureType: 1
   Heat: 100
-  Spread: 5000
+  Spread: 5
 --- !u!1001 &8988396382521227316
 PrefabInstance:
   m_ObjectHideFlags: 0
