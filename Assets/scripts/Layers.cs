@@ -10,4 +10,6 @@ public enum Layers
     Water = 4,
     UI = 5,
     spawnProtection = 7,
+    HurtBox = 8,
+    HitBox = 9,
 }

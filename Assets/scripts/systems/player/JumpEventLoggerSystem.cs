@@ -13,16 +13,10 @@ public partial class JumpEventLoggerSystem : SystemBase
 {
     protected override void OnUpdate()
     {
-        Entities
-            .WithAll<jumpEvent>()
-            .ForEach((in jumpEvent ev) =>
-            {
-                if (ev.Enabled)
-                {
-                    Debug.Log("Jump");
-                }
-            })
-            .WithoutBurst()
-            .Run();
+        foreach (var ev in SystemAPI.Query<RefRO<jumpEvent>>())
+        {
+            if (ev.ValueRO.Enabled)
+                Debug.Log("Jump");
+        }
     }
 }
