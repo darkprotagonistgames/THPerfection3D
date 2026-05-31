@@ -3,10 +3,11 @@ using Unity.Entities;
 using UnityEngine;
 
 /// <summary>
-/// Logs enabled damageEvent instances for Play Mode validation (v1 — no health).
+/// Logs enabled damageEvent instances for Play Mode validation.
 /// </summary>
 [UpdateInGroup(typeof(SimulationSystemGroup))]
 [UpdateAfter(typeof(EnableAllEcsEventsSystem))]
+[UpdateBefore(typeof(DamageHealthSystem))]
 [UpdateBefore(typeof(CleanupAllEcsEventsSystem))]
 public partial class DamageEventLoggerSystem : SystemBase
 {
