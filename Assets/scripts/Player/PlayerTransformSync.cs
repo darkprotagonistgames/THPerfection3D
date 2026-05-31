@@ -45,10 +45,4 @@ public class PlayerTransformSync : MonoBehaviour
             new Vector3(position.x, position.y, position.z),
             new Quaternion(rotation.value.x, rotation.value.y, rotation.value.z, rotation.value.w));
     }
-
-    private void OnDestroy()
-    {
-        if (_queryReady)
-            _playerQuery.Dispose();
-    }
 }
