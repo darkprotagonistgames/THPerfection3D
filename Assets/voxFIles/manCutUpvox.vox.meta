@@ -15,7 +15,7 @@ ScriptedImporter:
   scale: 1
   indexFormat: 0
   generateLightmapUV: 1
-  generateColliders: 1
+  generateColliders: 0
   chunkSize: 64
   AOStrength: 1
   originMode: 0

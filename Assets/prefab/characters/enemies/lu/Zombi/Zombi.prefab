@@ -116,7 +116,6 @@ GameObject:
   m_Component:
   - component: {fileID: 3217887740292173017}
   - component: {fileID: 4927230842274008986}
-  - component: {fileID: 2093264196711372302}
   - component: {fileID: 1043049355350135318}
   - component: {fileID: 4578532907354468530}
   m_Layer: 0
@@ -171,29 +170,6 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 112
   m_CollisionDetection: 0
---- !u!136 &2093264196711372302
-CapsuleCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7470503837719594817}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 2
-  m_Radius: 0.4
-  m_Height: 2
-  m_Direction: 1
-  m_Center: {x: 0, y: 1, z: 0}
 --- !u!114 &1043049355350135318
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -276,7 +252,17 @@ PrefabInstance:
       propertyPath: m_Name
       value: zombi_visual
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: 3766857627272594103, guid: 5e6f6e5c684bc144b8a9d252ab29ad18, type: 3}
+    - {fileID: 2866074290774410128, guid: 5e6f6e5c684bc144b8a9d252ab29ad18, type: 3}
+    - {fileID: 150847150014551939, guid: 5e6f6e5c684bc144b8a9d252ab29ad18, type: 3}
+    - {fileID: 3594241950715079657, guid: 5e6f6e5c684bc144b8a9d252ab29ad18, type: 3}
+    - {fileID: 5715912971504273279, guid: 5e6f6e5c684bc144b8a9d252ab29ad18, type: 3}
+    - {fileID: 1564846989741352324, guid: 5e6f6e5c684bc144b8a9d252ab29ad18, type: 3}
+    - {fileID: 7403608050792875843, guid: 5e6f6e5c684bc144b8a9d252ab29ad18, type: 3}
+    - {fileID: 1450149858689856272, guid: 5e6f6e5c684bc144b8a9d252ab29ad18, type: 3}
+    - {fileID: 4914883208376313469, guid: 5e6f6e5c684bc144b8a9d252ab29ad18, type: 3}
+    - {fileID: 1903837473956729623, guid: 5e6f6e5c684bc144b8a9d252ab29ad18, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []
