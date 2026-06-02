@@ -15,6 +15,9 @@ public class CharacterSettings : MonoBehaviour
     [Tooltip("Minimum horizontal speed before rotation updates (units/s).")]
     public float MinSpeedToRotate = 0.1f;
 
+    [Header("Health")]
+    public float Health = 10f;
+
     public class Baker : Baker<CharacterSettings>
     {
         public override void Bake(CharacterSettings authoring)
@@ -30,6 +33,11 @@ public class CharacterSettings : MonoBehaviour
                     MinSpeedSq = minSpeed * minSpeed,
                 });
             }
+
+            AddComponent(entity, new Health
+            {
+                Value = math.max(0f, authoring.Health),
+            });
         }
     }
 }
@@ -41,4 +49,10 @@ public struct CharacterTag : IComponentData { }
 public struct FaceVelocityRotation : IComponentData
 {
     public float MinSpeedSq;
+}
+
+/// <summary>Current hit points for a character. Baked from <see cref="CharacterSettings"/>.</summary>
+public struct Health : IComponentData
+{
+    public float Value;
 }

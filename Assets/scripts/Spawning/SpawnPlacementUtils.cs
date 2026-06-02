@@ -1,73 +1,102 @@
+using Unity.Mathematics;
 using UnityEngine;
 
 /// <summary>
-/// Shared utility methods used by SafeRandomSpawner and EcsSpawnBridge to find
-/// overlap-free placement positions using Physics.CheckSphere against the spawnFootprint layer.
+/// Managed spawn placement helpers for EcsSpawnBridge using Physics.CheckSphere
+/// against the spawnProtection layer.
 /// </summary>
 public static class SpawnPlacementUtils
 {
-    public struct FootprintSphere
+    public struct ProtectionSphere
     {
         public Vector3 LocalOffset;
         public float   Radius;
     }
 
-    /// <summary>
-    /// Collects all SphereColliders on the spawnFootprint layer from the prefab hierarchy.
-    /// Returns an empty array if none are found.
-    /// </summary>
-    public static FootprintSphere[] CollectFootprints(GameObject prefab)
+    public struct ProtectionCollection
     {
-        var colliders = prefab.GetComponentsInChildren<SphereCollider>(true);
-        int spawnFootprintLayer = (int)Layers.spawnFootprint;
+        public ProtectionSphere[] Spheres;
+        public uint               LayerMask;
+    }
+
+    /// <summary>
+    /// Collects spawnProtection colliders from the prefab hierarchy.
+    /// </summary>
+    public static ProtectionCollection CollectProtection(GameObject prefab)
+    {
+        var colliders = prefab.GetComponentsInChildren<UnityEngine.Collider>(true);
+        int layer = (int)Layers.spawnProtection;
 
         int count = 0;
         foreach (var col in colliders)
         {
-            if (col.gameObject.layer == spawnFootprintLayer)
+            if (col.gameObject.layer == layer)
                 count++;
         }
 
-        var result = new FootprintSphere[count];
+        var spheres = new ProtectionSphere[count];
         int index = 0;
         foreach (var col in colliders)
         {
-            if (col.gameObject.layer != spawnFootprintLayer)
+            if (col.gameObject.layer != layer)
                 continue;
 
-            result[index++] = new FootprintSphere
+            if (col is UnityEngine.SphereCollider sphere)
             {
-                LocalOffset = col.center,
-                Radius      = col.radius * col.transform.lossyScale.x,
-            };
+                spheres[index++] = new ProtectionSphere
+                {
+                    LocalOffset = sphere.center,
+                    Radius      = sphere.radius * sphere.transform.lossyScale.x,
+                };
+            }
+            else
+            {
+                Bounds bounds = col.bounds;
+                Vector3 localCenter = prefab.transform.InverseTransformPoint(bounds.center);
+                spheres[index++] = new ProtectionSphere
+                {
+                    LocalOffset = localCenter,
+                    Radius      = math.max(bounds.extents.x, bounds.extents.z),
+                };
+            }
         }
 
-        return result;
+        return new ProtectionCollection
+        {
+            Spheres   = spheres,
+            LayerMask = SpawnProtection.LayerMask,
+        };
     }
 
-    /// <summary>
-    /// Tries up to maxAttempts times to find a position within [minX,maxX] x [minZ,maxZ]
-    /// on the ground plane where no footprint sphere overlaps anything on the spawnFootprint layer.
-    /// Returns true and writes the position to result on success.
-    /// </summary>
+    public static float ComputePushStepDistance(ProtectionSphere[] spheres)
+    {
+        float maxExtent = 0.01f;
+        foreach (var sphere in spheres)
+        {
+            float extent = sphere.LocalOffset.magnitude + sphere.Radius;
+            if (extent > maxExtent)
+                maxExtent = extent;
+        }
+
+        return maxExtent * 2f;
+    }
+
     public static bool TryFindPosition(
-        FootprintSphere[] footprints,
+        ProtectionCollection protection,
         float minX, float maxX,
         float minZ, float maxZ,
         float spawnY,
         int maxAttempts,
         out Vector3 result)
     {
-        int footprintMask = 1 << (int)Layers.spawnFootprint;
-
         for (int attempt = 0; attempt < maxAttempts; attempt++)
         {
             var candidate = new Vector3(
-                Random.Range(minX, maxX),
+                UnityEngine.Random.Range(minX, maxX),
                 spawnY,
-                Random.Range(minZ, maxZ));
+                UnityEngine.Random.Range(minZ, maxZ));
 
-            if (IsPositionClear(footprints, candidate, footprintMask))
+            if (IsPositionClear(protection, candidate))
             {
                 result = candidate;
                 return true;
@@ -78,26 +107,19 @@ public static class SpawnPlacementUtils
         return false;
     }
 
-    /// <summary>
-    /// Variant that samples within a circle of searchRadius around origin.
-    /// Used by EcsSpawnBridge for enemy-triggered spawns.
-    /// Z is kept from origin.
-    /// </summary>
     public static bool TryFindPositionAround(
-        FootprintSphere[] footprints,
+        ProtectionCollection protection,
         Vector3 origin,
         float searchRadius,
         int maxAttempts,
         out Vector3 result)
     {
-        int footprintMask = 1 << (int)Layers.spawnFootprint;
-
         for (int attempt = 0; attempt < maxAttempts; attempt++)
         {
-            Vector2 offset    = Random.insideUnitCircle * searchRadius;
+            Vector2 offset    = UnityEngine.Random.insideUnitCircle * searchRadius;
             var     candidate = new Vector3(origin.x + offset.x, origin.y, origin.z + offset.y);
 
-            if (IsPositionClear(footprints, candidate, footprintMask))
+            if (IsPositionClear(protection, candidate))
             {
                 result = candidate;
                 return true;
@@ -109,20 +131,18 @@ public static class SpawnPlacementUtils
     }
 
     /// <summary>
-    /// Destroys every child GameObject that lives on the spawnFootprint layer.
-    /// Call this immediately after Instantiate to prevent footprint colliders from
-    /// being baked into ECS entities.
+    /// Destroys spawnProtection child objects after GameObject.Instantiate so they
+    /// are not left in the live scene hierarchy.
     /// </summary>
-    public static void RemoveSpawnFootprints(GameObject instance)
+    public static void RemoveSpawnProtection(GameObject instance)
     {
-        int spawnFootprintLayer = (int)Layers.spawnFootprint;
+        int layer = (int)Layers.spawnProtection;
         var allTransforms = instance.GetComponentsInChildren<Transform>(true);
 
-        // Collect first, destroy after — avoids mutating the hierarchy mid-iteration.
         var toDestroy = new System.Collections.Generic.List<GameObject>();
         foreach (Transform t in allTransforms)
         {
-            if (t.gameObject.layer == spawnFootprintLayer && t.gameObject != instance)
+            if (t.gameObject.layer == layer && t.gameObject != instance)
                 toDestroy.Add(t.gameObject);
         }
 
@@ -133,15 +153,15 @@ public static class SpawnPlacementUtils
         }
     }
 
-    // Returns true when none of the footprint spheres overlap spawnFootprint colliders at candidate.
-    private static bool IsPositionClear(FootprintSphere[] footprints, Vector3 candidate, int footprintMask)
+    private static bool IsPositionClear(ProtectionCollection protection, Vector3 candidate)
     {
-        foreach (var sphere in footprints)
+        foreach (var sphere in protection.Spheres)
         {
             Vector3 worldPos = candidate + sphere.LocalOffset;
-            if (Physics.CheckSphere(worldPos, sphere.Radius, footprintMask, QueryTriggerInteraction.Collide))
+            if (Physics.CheckSphere(worldPos, sphere.Radius, (int)protection.LayerMask, QueryTriggerInteraction.Collide))
                 return false;
         }
+
         return true;
     }
 }

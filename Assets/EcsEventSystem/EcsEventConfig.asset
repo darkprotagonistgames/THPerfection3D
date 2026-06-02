@@ -12,9 +12,42 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 598d009af9ee1f24abe0c344d15964ee, type: 3}
   m_Name: EcsEventConfig
   m_EditorClassIdentifier: Assembly-CSharp::THPerfection.EcsEvents.EcsEventConfig
+  Enums:
+  - EnumName: wepon
+    Values:
+    - Name: bat
+      AddsTag: 1
+    - Name: gun
+      AddsTag: 0
+    - Name: shotgun
+      AddsTag: 0
+  - EnumName: targetable
+    Values:
+    - Name: wall
+      AddsTag: 1
+    - Name: zombi
+      AddsTag: 1
+    - Name: player
+      AddsTag: 1
   Events:
   - EventName: jump
     Namespace: THPerfection.GeneratedEvents
     Parameters:
     - Name: high
       Kind: 3
+      EnumDefinitionName: 
+  - EventName: damage
+    Namespace: THPerfection.GeneratedEvents
+    Parameters:
+    - Name: amount
+      Kind: 3
+      EnumDefinitionName: 
+    - Name: sourceType
+      Kind: 9
+      EnumDefinitionName: wepon
+    - Name: targetType
+      Kind: 9
+      EnumDefinitionName: targetable
+  - EventName: death
+    Namespace: THPerfection.GeneratedEvents
+    Parameters: []

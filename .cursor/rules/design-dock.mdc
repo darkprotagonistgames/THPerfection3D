@@ -1,0 +1,27 @@
+---
+description: Point agents at Design Dock for game design, palettes, and run/round rules
+alwaysApply: true
+---
+
+# Design Dock
+
+Before designing or implementing **gameplay loops**, **rounds**, **omens**, **events**, **world generation**, **spawning**, **UI colors**, or **faction art**, read the Design Dock:
+
+`Assets/DesignDock/`
+
+| Doc | Use |
+|-----|-----|
+| [GameDesign.md](Assets/DesignDock/GameDesign.md) | Round-based top-down bullet hell, roguelike rounds, omens, events, persistent active map, ECS rationale |
+| [FactionPaletteRules.md](Assets/DesignDock/FactionPaletteRules.md) | Faction and blood color rules |
+| [README.md](Assets/DesignDock/README.md) | Palette files, hex table, MagicaVoxel paths |
+| [palette-reference.json](Assets/DesignDock/palette-reference.json) | Machine-readable colors |
+
+## Non-negotiables (from GameDesign)
+
+- Gameplay sections: **top-down bullet hell**; **everything on the map stays active** (ECS-friendly simulation).
+- **Rounds** structure both story and roguelike run pacing.
+- Each round: **3 omens → discard 1 → kept pair biases events** → roll/apply events (spawns, new locations, etc.).
+- **Do not remove the world between rounds**; existing entities keep affecting the run.
+- Run world = **several interacting generators/layers** (baseline + omens + events + leftover state), not one-shot reset.
+
+Do not introduce off-palette colors or round-end map wipes unless the user explicitly requests an exception documented in Design Dock.

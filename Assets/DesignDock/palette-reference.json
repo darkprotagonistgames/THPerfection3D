@@ -1,0 +1,39 @@
+{
+  "version": 1,
+  "source": "THperffectionArt/color-pallets",
+  "blood": "#C8262D",
+  "factions": {
+    "neutral": {
+      "bg": ["#1E1F1B", "#35372F", "#575548"],
+      "fg": ["#8A816B", "#B4AA8B"]
+    },
+    "lu": {
+      "bg": ["#241718", "#3B2322", "#5A3430"],
+      "fg": ["#D46A3A", "#F0C06A", "#F4E3B2"]
+    },
+    "hp": {
+      "bg": ["#141C23", "#21313B", "#31484D"],
+      "fg": ["#83C7B5", "#C7E6D8", "#E7FFF4"]
+    },
+    "j": {
+      "bg": ["#1B1D28", "#2D3143", "#484B5B"],
+      "fg": ["#E4D8B8", "#F6F1DE", "#FFF8EE"]
+    }
+  },
+  "gplPalettes": {
+    "ui": "ColorPalettes/neutral-ui.gpl",
+    "cardArt": {
+      "neutral": "ColorPalettes/neutral-card-art.gpl",
+      "lu": "ColorPalettes/lu-card-art.gpl",
+      "hp": "ColorPalettes/hp-card-art.gpl",
+      "j": "ColorPalettes/j-card-art.gpl"
+    },
+    "enemy": {
+      "neutral": "ColorPalettes/neutral-enemy.gpl",
+      "lu": "ColorPalettes/lu-enemy.gpl",
+      "hp": "ColorPalettes/hp-enemy.gpl",
+      "j": "ColorPalettes/j-enemy.gpl"
+    }
+  },
+  "magicaVoxelPalette": "../voxFIles/THPerfection-palette-8x32.png"
+}

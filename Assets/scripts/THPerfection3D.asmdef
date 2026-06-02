@@ -11,7 +11,8 @@
         "Unity.Burst",
         "Unity.Collections",
         "Unity.InputSystem",
-        "Unity.ugui"
+        "Unity.ugui",
+        "Rukhanka.Runtime"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

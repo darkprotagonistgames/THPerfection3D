@@ -14,7 +14,24 @@ namespace THPerfection.EcsEvents
         Quaternion,
         Float2,
         Float3,
-        Float4
+        Float4,
+        Enum
+    }
+
+    [Serializable]
+    public class EcsEnumValueDefinition
+    {
+        public string Name = "Value0";
+
+        [Tooltip("When this value is passed to an event parameter, the generated Create method also adds a matching tag component on the event entity.")]
+        public bool AddsTag;
+    }
+
+    [Serializable]
+    public class EcsEnumDefinition
+    {
+        public string EnumName = "NewEnum";
+        public List<EcsEnumValueDefinition> Values = new List<EcsEnumValueDefinition>();
     }
 
     [Serializable]
@@ -22,6 +39,9 @@ namespace THPerfection.EcsEvents
     {
         public string Name;
         public EcsEventParameterKind Kind;
+
+        [Tooltip("Name of the configured enum definition to use when Kind is Enum.")]
+        public string EnumDefinitionName;
     }
 
     [CreateAssetMenu(
@@ -41,7 +61,7 @@ namespace THPerfection.EcsEvents
             public List<EcsEventParameter> Parameters = new List<EcsEventParameter>();
         }
 
+        public List<EcsEnumDefinition> Enums = new List<EcsEnumDefinition>();
         public List<EventDefinition> Events = new List<EventDefinition>();
     }
 }
-

@@ -1,0 +1,63 @@
+using THPerfection.GeneratedEvents;
+using Unity.Entities;
+using UnityEngine;
+
+/// <summary>
+/// Passive damage receiver on a collider child. Put this GameObject on <see cref="Layers.HurtBox"/> (enemy)
+/// or <see cref="Layers.PlayerHurtBox"/> (player). Include Layers are set to the matching hitbox layer.
+/// Requires a trigger collider and a kinematic Rigidbody (separate physics body with correct layer).
+/// <see cref="CombatColliderFollowOwnerSystem"/> keeps the body aligned with the character root.
+/// </summary>
+[RequireComponent(typeof(Collider))]
+[DisallowMultipleComponent]
+public class HurtboxAuthoring : MonoBehaviour
+{
+    [Tooltip("Stored on damageEvent.targetType (not used for physics filtering).")]
+    public targetable Category = targetable.zombi;
+
+    [Tooltip("Character root (future health owner); if null, uses parent CharacterSettings.")]
+    public Transform OwnerOverride;
+
+    void OnValidate()
+    {
+        CombatColliderBakeUtility.EnsureKinematicRigidbody(gameObject);
+
+        if (gameObject.layer != CombatLayers.HurtBoxLayer
+            && gameObject.layer != CombatLayers.PlayerHurtBoxLayer)
+        {
+            gameObject.layer = CombatLayers.HurtBoxLayer;
+        }
+
+        int includeMask = CombatLayers.GetHurtBoxIncludeMask(gameObject.layer);
+
+        if (TryGetComponent<SphereCollider>(out var sphere))
+        {
+            sphere.isTrigger = true;
+            sphere.includeLayers = includeMask;
+        }
+        else if (TryGetComponent<BoxCollider>(out var box))
+        {
+            box.isTrigger = true;
+            box.includeLayers = includeMask;
+        }
+        else if (TryGetComponent<CapsuleCollider>(out var capsule))
+        {
+            capsule.isTrigger = true;
+            capsule.includeLayers = includeMask;
+        }
+    }
+
+    public class Baker : Baker<HurtboxAuthoring>
+    {
+        public override void Bake(HurtboxAuthoring authoring)
+        {
+            Entity entity = GetEntity(TransformUsageFlags.Dynamic);
+            Entity ownerEntity = CombatOwnerBakeUtility.ResolveOwnerEntity(this, authoring.OwnerOverride, authoring);
+
+            AddComponent(entity, new HurtboxData { Category = authoring.Category });
+            AddComponent(entity, new HurtboxOwner { Value = ownerEntity });
+            CombatOwnerBakeUtility.AddTargetableTag(this, entity, authoring.Category);
+            CombatColliderBakeUtility.BakeLocalOffset(this, authoring, entity);
+        }
+    }
+}
