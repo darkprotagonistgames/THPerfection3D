@@ -5,7 +5,7 @@ using Unity.Transforms;
 using UnityEngine;
 
 /// <summary>
-/// Snaps the Unity Camera to the nearest anchor after animation has updated entity transforms.
+/// Smoothly moves the Unity Camera toward the nearest anchor after animation has updated entity transforms.
 /// Must not read <see cref="LocalTransform"/> from MonoBehaviour LateUpdate while Rukhanka jobs are running.
 /// </summary>
 [UpdateAfter(typeof(RukhankaAnimationSystemGroup))]
@@ -47,9 +47,31 @@ public partial class CameraAnchorFollowSystem : SystemBase
         if (!foundAnchor)
             return;
 
-        unityCamera.transform.SetPositionAndRotation(bestTransform.Position, bestTransform.Rotation);
+        float deltaTime = SystemAPI.Time.DeltaTime;
+        float positionSmoothTime = MainGameObjectCamera.Instance != null
+            ? MainGameObjectCamera.Instance.PositionSmoothTime
+            : 0.2f;
+        float rotationSmoothTime = MainGameObjectCamera.Instance != null
+            ? MainGameObjectCamera.Instance.RotationSmoothTime
+            : 0.2f;
+
+        Transform cameraTransform = unityCamera.transform;
+        float3 currentPosition = cameraTransform.position;
+        quaternion currentRotation = cameraTransform.rotation;
+
+        float positionT = 1f - math.exp(-deltaTime / math.max(0.01f, positionSmoothTime));
+        float rotationT = 1f - math.exp(-deltaTime / math.max(0.01f, rotationSmoothTime));
+
+        float3 smoothedPosition = math.lerp(currentPosition, bestTransform.Position, positionT);
+        quaternion smoothedRotation = math.slerp(currentRotation, bestTransform.Rotation, rotationT);
+
+        cameraTransform.SetPositionAndRotation(smoothedPosition, smoothedRotation);
 
         if (SystemAPI.TryGetSingletonEntity<MainEntityCamera>(out Entity cameraEntity))
-            SystemAPI.SetComponent(cameraEntity, bestTransform);
+        {
+            SystemAPI.SetComponent(cameraEntity, LocalTransform.FromPositionRotation(
+                smoothedPosition,
+                smoothedRotation));
+        }
     }
 }

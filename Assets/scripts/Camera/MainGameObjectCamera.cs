@@ -6,23 +6,34 @@ using UnityEngine;
 [DisallowMultipleComponent]
 public class MainGameObjectCamera : MonoBehaviour
 {
-    public static Camera Instance { get; private set; }
+    public static MainGameObjectCamera Instance { get; private set; }
+
+    [Tooltip("Seconds to ease toward the target anchor position. Lower = faster.")]
+    [Min(0.01f)]
+    public float PositionSmoothTime = 0.2f;
+
+    [Tooltip("Seconds to ease toward the target anchor rotation. Lower = faster.")]
+    [Min(0.01f)]
+    public float RotationSmoothTime = 0.2f;
+
+    Camera _unityCamera;
 
     void Awake()
     {
-        Instance = GetComponent<Camera>();
+        Instance = this;
+        _unityCamera = GetComponent<Camera>();
     }
 
     void OnDestroy()
     {
-        if (Instance == GetComponent<Camera>())
+        if (Instance == this)
             Instance = null;
     }
 
     public static Camera Resolve()
     {
-        if (Instance != null)
-            return Instance;
+        if (Instance != null && Instance._unityCamera != null)
+            return Instance._unityCamera;
 
         return Camera.main;
     }

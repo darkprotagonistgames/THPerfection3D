@@ -1,0 +1,29 @@
+GIMP Palette
+Name: THPerfection MagicaVoxel Master
+Columns: 8
+#
+  0   0   0 MV_00_Empty
+ 30  31  27 Neutral_BG_1
+ 53  55  47 Neutral_BG_2
+ 87  85  72 Neutral_BG_3
+138 129 107 Neutral_FG_1
+180 170 139 Neutral_FG_2
+200  38  45 Blood_C8262D
+ 36  23  24 Lu_BG_1
+ 59  35  34 Lu_BG_2
+ 90  52  48 Lu_BG_3
+212 106  58 Lu_FG_1
+240 192 106 Lu_FG_2
+244 227 178 Lu_FG_3
+ 20  28  35 HP_BG_1
+ 33  49  59 HP_BG_2
+ 49  72  77 HP_BG_3
+131 199 181 HP_FG_1
+199 230 216 HP_FG_2
+231 255 244 HP_FG_3
+ 27  29  40 J_BG_1
+ 45  49  67 J_BG_2
+ 72  75  91 J_BG_3
+228 216 184 J_FG_1
+246 241 222 J_FG_2
+255 248 238 J_FG_3

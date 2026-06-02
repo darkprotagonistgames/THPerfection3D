@@ -12,8 +12,7 @@ using Unity.Transforms;
 /// positions. Re-apply the baked local offset and zero velocity before each physics step.
 /// </summary>
 [BurstCompile]
-[UpdateInGroup(typeof(SimulationSystemGroup))]
-[UpdateBefore(typeof(FixedStepSimulationSystemGroup))]
+[UpdateInGroup(typeof(FixedStepSimulationSystemGroup), OrderFirst = true)]
 public partial struct CombatColliderFollowOwnerSystem : ISystem
 {
     [BurstCompile]

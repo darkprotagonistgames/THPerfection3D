@@ -21,7 +21,6 @@ public partial struct CameraAnchorSpawnSystem : ISystem
 
     public void OnDestroy(ref SystemState state)
     {
-        _existingAnchorsQuery.Dispose();
     }
 
     public void OnUpdate(ref SystemState state)

@@ -372,7 +372,7 @@ MonoBehaviour:
   Prefab: {fileID: 7470503837719594817, guid: 4bab069a7b4a0bc4c92144e55ae52516, type: 3}
   BoundsMin: {x: -500, y: -500}
   BoundsMax: {x: 5000, y: 5000}
-  SpawnCount: 2000
+  SpawnCount: 250
   MaxPushAttempts: 20
   RandomSeed: 0
 --- !u!4 &1521495406

@@ -20,7 +20,7 @@ public partial struct HitboxTriggerSystem : ISystem
     {
         state.RequireForUpdate<SimulationSingleton>();
         state.RequireForUpdate<HitboxData>();
-        _processedPairs = new NativeParallelHashMap<long, byte>(128, Allocator.Persistent);
+        _processedPairs = new NativeParallelHashMap<long, byte>(2048, Allocator.Persistent);
     }
 
     [BurstCompile]
