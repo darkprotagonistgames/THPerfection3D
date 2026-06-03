@@ -1,3 +1,5 @@
+using UnityEngine;
+
 /// <summary>Layer masks for hitbox / hurtbox physics filtering (see Project Settings → Physics).</summary>
 public static class CombatLayers
 {
@@ -23,4 +25,13 @@ public static class CombatLayers
 
     public static int GetHurtBoxIncludeMask(int hurtBoxLayer) =>
         hurtBoxLayer == PlayerHurtBoxLayer ? PlayerHurtBoxIncludeMask : HurtBoxIncludeMask;
+
+    /// <summary>Enemy <see cref="Layers.HurtBox"/> bodies (zombies, etc.).</summary>
+    public static readonly LayerMask EnemyHurtboxLayers = 1 << HurtBoxLayer;
+
+    /// <summary>Player <see cref="Layers.PlayerHurtBox"/> bodies.</summary>
+    public static readonly LayerMask PlayerHurtboxLayers = 1 << PlayerHurtBoxLayer;
+
+    /// <summary>All combat hurtbox layers.</summary>
+    public static readonly LayerMask AllHurtboxLayers = EnemyHurtboxLayers | PlayerHurtboxLayers;
 }

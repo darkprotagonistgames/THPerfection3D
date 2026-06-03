@@ -1,0 +1,19 @@
+---
+description: Model forward is -Z (camera-facing rigs); use for cones, aim, and rotation
+alwaysApply: true
+---
+
+# Model forward (-Z)
+
+Voxel/character models in this project are authored **facing the camera**, not Unity's default +Z forward.
+
+## Convention
+
+- **Gameplay forward** = world **-Z** (toward the camera in the default top-down rig).
+- **Do not** use `new float3(0, 0, 1)` or "+Z forward" for aim cones, targeting arcs, or "in front of the character" unless explicitly reversing for a one-off debug tool.
+- Prefer `TopDownPlane.ModelForward` and `TopDownPlane.ForwardFromRotation(quaternion)` for XZ-plane direction from `LocalTransform.Rotation`.
+
+## When implementing
+
+- Cone attack / targeting cones: center the arc on **-Z** in local space.
+- New movement-facing or spawn-offset logic: align with existing systems (`FaceVelocityRotationSystem`, `ConeAttackSystem`) and this rule before introducing +Z assumptions.

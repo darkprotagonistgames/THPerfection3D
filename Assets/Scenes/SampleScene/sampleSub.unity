@@ -213,6 +213,70 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1369661128
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1369661131}
+  - component: {fileID: 1369661130}
+  - component: {fileID: 1369661129}
+  m_Layer: 0
+  m_Name: GameObject
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1369661129
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1369661128}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 58648b76fc11c2b4a96cdff1ed71aef8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: THPerfection3D::ConeAttackAuthoring
+  ConeAttackPrefab: {fileID: 7373220452427547284, guid: de3181b72c9abf545a73d733478e780f, type: 3}
+  Range: 8
+  ConeAngleDegrees: 90
+  TargetLayers:
+    serializedVersion: 2
+    m_Bits: 256
+  Cooldown: 1
+--- !u!114 &1369661130
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1369661128}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5826eeb426f79b14aa0ffe010e8eb811, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: THPerfection3D::SnapToPlayerAuthoring
+--- !u!4 &1369661131
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1369661128}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 1, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1382262147
 GameObject:
   m_ObjectHideFlags: 0
@@ -372,7 +436,7 @@ MonoBehaviour:
   Prefab: {fileID: 7470503837719594817, guid: 4bab069a7b4a0bc4c92144e55ae52516, type: 3}
   BoundsMin: {x: -500, y: -500}
   BoundsMax: {x: 5000, y: 5000}
-  SpawnCount: 250
+  SpawnCount: 5
   MaxPushAttempts: 20
   RandomSeed: 0
 --- !u!4 &1521495406
@@ -400,11 +464,11 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 1572775477411161328, guid: 86b211583ed1c834a825d397304e37f9, type: 3}
       propertyPath: AnchorY
-      value: 300
+      value: 200
       objectReference: {fileID: 0}
     - target: {fileID: 1572775477411161328, guid: 86b211583ed1c834a825d397304e37f9, type: 3}
       propertyPath: AnchorEulerAngles.x
-      value: 85
+      value: 90
       objectReference: {fileID: 0}
     - target: {fileID: 5635229321588724001, guid: 86b211583ed1c834a825d397304e37f9, type: 3}
       propertyPath: m_LocalPosition.x
@@ -459,6 +523,7 @@ PrefabInstance:
 SceneRoots:
   m_ObjectHideFlags: 0
   m_Roots:
+  - {fileID: 1369661131}
   - {fileID: 4231293328008340884}
   - {fileID: 1382262150}
   - {fileID: 823207007}
