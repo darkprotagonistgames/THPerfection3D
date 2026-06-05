@@ -7,7 +7,8 @@ using Unity.Physics.Systems;
 
 /// <summary>
 /// Hitbox-led trigger handling: when a hitbox overlaps a hurtbox, emits
-/// <see cref="damageEvent"/> on the hurtbox owner (future health entity).
+/// <see cref="damageEvent"/> on the hurtbox owner unless a linked TTL record
+/// already tracks this attacker within <see cref="HurtboxData.InvulnerabilitySeconds"/>.
 /// </summary>
 [BurstCompile]
 [UpdateInGroup(typeof(PhysicsSimulationGroup))]
@@ -44,11 +45,15 @@ public partial struct HitboxTriggerSystem : ISystem
         var hitboxOwnerLookup = SystemAPI.GetComponentLookup<HitboxOwner>(true);
         var hurtboxOwnerLookup = SystemAPI.GetComponentLookup<HurtboxOwner>(true);
         var invulnerableLookup = SystemAPI.GetComponentLookup<SpawnInvulnerabilityTag>(true);
+        var invulnLinkLookup = SystemAPI.GetBufferLookup<HurtboxInvulnerabilityLink>(true);
+        var invulnRecordLookup = SystemAPI.GetComponentLookup<HurtboxInvulnerabilityRecord>(true);
         hitboxDataLookup.Update(ref state);
         hurtboxDataLookup.Update(ref state);
         hitboxOwnerLookup.Update(ref state);
         hurtboxOwnerLookup.Update(ref state);
         invulnerableLookup.Update(ref state);
+        invulnLinkLookup.Update(ref state);
+        invulnRecordLookup.Update(ref state);
 
         var job = new HitboxTriggerJob
         {
@@ -57,6 +62,8 @@ public partial struct HitboxTriggerSystem : ISystem
             HitboxOwnerLookup = hitboxOwnerLookup,
             HurtboxOwnerLookup = hurtboxOwnerLookup,
             InvulnerableLookup = invulnerableLookup,
+            InvulnLinkLookup = invulnLinkLookup,
+            InvulnRecordLookup = invulnRecordLookup,
             ProcessedPairs = _processedPairs.AsParallelWriter(),
             Ecb = ecb.AsParallelWriter(),
         };
@@ -74,6 +81,8 @@ public partial struct HitboxTriggerSystem : ISystem
         [ReadOnly] public ComponentLookup<HitboxOwner> HitboxOwnerLookup;
         [ReadOnly] public ComponentLookup<HurtboxOwner> HurtboxOwnerLookup;
         [ReadOnly] public ComponentLookup<SpawnInvulnerabilityTag> InvulnerableLookup;
+        [ReadOnly] public BufferLookup<HurtboxInvulnerabilityLink> InvulnLinkLookup;
+        [ReadOnly] public ComponentLookup<HurtboxInvulnerabilityRecord> InvulnRecordLookup;
         public NativeParallelHashMap<long, byte>.ParallelWriter ProcessedPairs;
         public EntityCommandBuffer.ParallelWriter Ecb;
 
@@ -124,12 +133,55 @@ public partial struct HitboxTriggerSystem : ISystem
                 return;
 
             long pairKey = MakePairKey(hitboxEntity, hurtboxEntity);
-if (!ProcessedPairs.TryAdd(pairKey, 1))
+            if (!ProcessedPairs.TryAdd(pairKey, 1))
+                return;
+
+            if (HasInvulnerabilityRecord(hurtboxEntity, hitboxOwner, InvulnLinkLookup, InvulnRecordLookup))
                 return;
 
             int sortKey = (int)(pairKey ^ (pairKey >> 32));
+            AddInvulnerabilityRecord(hurtboxEntity, hitboxOwner, hurtbox.InvulnerabilitySeconds, sortKey, InvulnLinkLookup, Ecb);
             hurtboxOwner.CreatedamageEvent(hitboxOwner, Ecb, sortKey, hitbox.Damage, hitbox.WeaponType, hurtbox.Category);
-}
+        }
+
+        static bool HasInvulnerabilityRecord(
+            Entity hurtboxEntity,
+            Entity attacker,
+            in BufferLookup<HurtboxInvulnerabilityLink> linkLookup,
+            in ComponentLookup<HurtboxInvulnerabilityRecord> recordLookup)
+        {
+            if (!linkLookup.HasBuffer(hurtboxEntity))
+                return false;
+
+            foreach (HurtboxInvulnerabilityLink link in linkLookup[hurtboxEntity])
+            {
+                if (recordLookup.HasComponent(link.RecordEntity)
+                    && recordLookup[link.RecordEntity].Target == attacker)
+                    return true;
+            }
+
+            return false;
+        }
+
+        static void AddInvulnerabilityRecord(
+            Entity hurtboxEntity,
+            Entity attacker,
+            float seconds,
+            int sortKey,
+            in BufferLookup<HurtboxInvulnerabilityLink> linkLookup,
+            EntityCommandBuffer.ParallelWriter ecb)
+        {
+            if (seconds <= 0f)
+                return;
+
+            if (!linkLookup.HasBuffer(hurtboxEntity))
+                ecb.AddBuffer<HurtboxInvulnerabilityLink>(sortKey, hurtboxEntity);
+
+            Entity record = ecb.CreateEntity(sortKey);
+            ecb.AddComponent(sortKey, record, new HurtboxInvulnerabilityRecord { Target = attacker });
+            ecb.AddComponent(sortKey, record, new TtlData { SecondsRemaining = seconds });
+            ecb.AppendToBuffer(sortKey, hurtboxEntity, new HurtboxInvulnerabilityLink { RecordEntity = record });
+        }
 
         static long MakePairKey(Entity hitboxEntity, Entity hurtboxEntity)
         {

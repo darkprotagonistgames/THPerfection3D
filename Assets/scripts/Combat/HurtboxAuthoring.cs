@@ -15,6 +15,10 @@ public class HurtboxAuthoring : MonoBehaviour
     [Tooltip("Stored on damageEvent.targetType (not used for physics filtering).")]
     public targetable Category = targetable.zombi;
 
+    [Min(0f)]
+    [Tooltip("Seconds before this hurtbox can apply damage to the same attacker again.")]
+    public float InvulnerabilitySeconds = 0.5f;
+
     [Tooltip("Character root (future health owner); if null, uses parent CharacterSettings.")]
     public Transform OwnerOverride;
 
@@ -54,8 +58,13 @@ public class HurtboxAuthoring : MonoBehaviour
             Entity entity = GetEntity(TransformUsageFlags.Dynamic);
             Entity ownerEntity = CombatOwnerBakeUtility.ResolveOwnerEntity(this, authoring.OwnerOverride, authoring);
 
-            AddComponent(entity, new HurtboxData { Category = authoring.Category });
+            AddComponent(entity, new HurtboxData
+            {
+                Category = authoring.Category,
+                InvulnerabilitySeconds = authoring.InvulnerabilitySeconds,
+            });
             AddComponent(entity, new HurtboxOwner { Value = ownerEntity });
+            AddBuffer<HurtboxInvulnerabilityLink>(entity);
             CombatOwnerBakeUtility.AddTargetableTag(this, entity, authoring.Category);
             CombatColliderBakeUtility.BakeLocalOffset(this, authoring, entity);
         }
