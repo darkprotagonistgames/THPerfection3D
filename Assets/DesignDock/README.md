@@ -7,6 +7,7 @@ Central design reference for this Unity project. Agents and contributors should 
 | Doc | Contents |
 |-----|----------|
 | [GameDesign.md](GameDesign.md) | Round-based top-down bullet hell; roguelike rounds; omens (pick 3, discard 1); event rolls; persistent active map; ECS; run world layers |
+| [LevelGenPlan.md](LevelGenPlan.md) | Procedural office building (3 floors), grid rooms, doorway expansion, prefab authoring, door lifecycle |
 
 **Short summary:** Gameplay is active top-down bullet hell on a map where all entities simulate. Runs advance in **rounds**. Each round the player keeps **two of three omens**, which shape **event** probability; events add spawns, locations, etc. **Nothing is wiped between rounds**—the world accumulates.
 
