@@ -46,8 +46,6 @@ public partial struct ConeAttackSystem : ISystem
 
 
 
-    [BurstCompile]
-
     public void OnCreate(ref SystemState state)
 
     {

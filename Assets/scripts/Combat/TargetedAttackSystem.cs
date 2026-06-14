@@ -25,7 +25,6 @@ public partial struct TargetedAttackSystem : ISystem
         public Entity TargetEntity;
     }
 
-    [BurstCompile]
     public void OnCreate(ref SystemState state)
     {
         _hurtboxTargetQuery = CombatAttackTargeting.CreateHurtboxTargetQuery(ref state);
