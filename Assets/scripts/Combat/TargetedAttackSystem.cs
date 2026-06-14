@@ -1,182 +1,97 @@
 using Unity.Burst;
-
 using Unity.Collections;
-
 using Unity.Entities;
-
 using Unity.Mathematics;
-
 using Unity.Transforms;
 
-
-
 /// <summary>
-
-/// When an entity's cone-attack cooldown has elapsed, scans hurtboxes on matching physics layers in
-
-/// range and forward cone; on the first match, instantiates <see cref="ConeAttackData.ConeAttackPrefab"/>
-
-/// at the spawner's <see cref="LocalTransform"/> with no ongoing link to the spawner.
-
+/// When an entity's targeted-attack cooldown has elapsed, finds the closest hurtbox on matching physics
+/// layers within range and instantiates <see cref="TargetedAttackData.AttackPrefab"/> at the spawner's
+/// <see cref="LocalTransform"/> with <see cref="AttackSpawnContext"/> origin and target set.
 /// </summary>
-
 [BurstCompile]
-
 [UpdateInGroup(typeof(SimulationSystemGroup))]
-
 [UpdateAfter(typeof(TransformSystemGroup))]
-
-public partial struct ConeAttackSystem : ISystem
-
+public partial struct TargetedAttackSystem : ISystem
 {
-
     private EntityQuery _hurtboxTargetQuery;
 
     private struct PendingSpawn
-
     {
-
         public Entity Prefab;
-
         public LocalTransform Transform;
-
         public Entity GroupOwner;
-
+        public Entity OriginEntity;
+        public Entity TargetEntity;
     }
-
-
 
     [BurstCompile]
-
     public void OnCreate(ref SystemState state)
-
     {
-
         _hurtboxTargetQuery = CombatAttackTargeting.CreateHurtboxTargetQuery(ref state);
-        state.RequireForUpdate<ConeAttackData>();
-
+        state.RequireForUpdate<TargetedAttackData>();
     }
-
-
 
     public void OnUpdate(ref SystemState state)
-
     {
-
         var targets = new NativeList<CombatAttackTargetCandidate>(Allocator.Temp);
-
         CombatAttackTargeting.CollectHurtboxTargets(_hurtboxTargetQuery, targets);
 
-
-
         var pending = new NativeList<PendingSpawn>(4, Allocator.Temp);
-
         float deltaTime = SystemAPI.Time.DeltaTime;
 
-
-
-        foreach (var (coneAttack, transform, entity) in SystemAPI
-
-                     .Query<RefRW<ConeAttackData>, RefRO<LocalTransform>>()
-
+        foreach (var (targetedAttack, transform, entity) in SystemAPI
+                     .Query<RefRW<TargetedAttackData>, RefRO<LocalTransform>>()
                      .WithEntityAccess())
-
         {
-
-            ref ConeAttackData data = ref coneAttack.ValueRW;
-
-
+            ref TargetedAttackData data = ref targetedAttack.ValueRW;
 
             if (data.CooldownRemaining > 0f)
-
             {
-
                 data.CooldownRemaining = math.max(0f, data.CooldownRemaining - deltaTime);
-
                 continue;
-
             }
 
-
-
-            if (data.ConeAttackPrefab == Entity.Null || data.Range <= 0f)
-
+            if (data.AttackPrefab == Entity.Null || data.Range <= 0f)
                 continue;
 
-
-
-            if (!CombatAttackTargeting.TryFindConeTarget(
-
+            if (!CombatAttackTargeting.TryFindClosestTarget(
                     in transform.ValueRO,
-
                     entity,
-
                     in targets,
-
                     data.TargetLayerMask,
-
                     data.Range,
-
-                    data.HalfAngleRadians,
-
-                    out _))
-
+                    out Entity targetEntity))
                 continue;
-
-
 
             pending.Add(new PendingSpawn
-
             {
-
-                Prefab = data.ConeAttackPrefab,
-
+                Prefab = data.AttackPrefab,
                 Transform = transform.ValueRO,
-
                 GroupOwner = entity,
-
+                OriginEntity = entity,
+                TargetEntity = targetEntity,
             });
-
             data.CooldownRemaining = data.Cooldown;
-
         }
-
-
 
         if (pending.Length > 0)
-
         {
-
             var em = state.EntityManager;
-
             for (int i = 0; i < pending.Length; i++)
-
             {
-
                 PendingSpawn spawn = pending[i];
-
-                LinkedEntityGroupUtility.InstantiateAsSpawnChild(
-
+                LinkedEntityGroupUtility.InstantiateAsSpawnChildWithContext(
                     em,
-
                     spawn.GroupOwner,
-
                     spawn.Prefab,
-
-                    spawn.Transform);
-
+                    spawn.Transform,
+                    spawn.OriginEntity,
+                    spawn.TargetEntity);
             }
-
         }
 
-
-
         pending.Dispose();
-
         targets.Dispose();
-
     }
-
 }
-
-

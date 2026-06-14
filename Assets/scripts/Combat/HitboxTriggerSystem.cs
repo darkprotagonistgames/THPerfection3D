@@ -37,7 +37,7 @@ public partial struct HitboxTriggerSystem : ISystem
         _processedPairs.Clear();
 
         var ecb = SystemAPI
-            .GetSingleton<BeginSimulationEntityCommandBufferSystem.Singleton>()
+            .GetSingleton<EndSimulationEntityCommandBufferSystem.Singleton>()
             .CreateCommandBuffer(state.WorldUnmanaged);
 
         var hitboxDataLookup = SystemAPI.GetComponentLookup<HitboxData>(true);
@@ -139,7 +139,8 @@ public partial struct HitboxTriggerSystem : ISystem
             if (HasInvulnerabilityRecord(hurtboxEntity, hitboxOwner, InvulnLinkLookup, InvulnRecordLookup))
                 return;
 
-            int sortKey = (int)(pairKey ^ (pairKey >> 32));
+            // Sort by hurtbox so buffer commands for the same target stay ordered across trigger pairs.
+            int sortKey = hurtboxEntity.Index;
             AddInvulnerabilityRecord(hurtboxEntity, hitboxOwner, hurtbox.InvulnerabilitySeconds, sortKey, InvulnLinkLookup, Ecb);
             hurtboxOwner.CreatedamageEvent(hitboxOwner, Ecb, sortKey, hitbox.Damage, hitbox.WeaponType, hurtbox.Category);
         }
