@@ -38,7 +38,7 @@ namespace THPerfection.LevelGen.Tests
         [Test]
         public void RotateSide_advancesWithRotation()
         {
-            Assert.AreEqual(DoorSide.West, GridTransforms.RotateSide(DoorSide.North, Rotation90.R90));
+            Assert.AreEqual(DoorSide.East, GridTransforms.RotateSide(DoorSide.North, Rotation90.R90));
             Assert.AreEqual(DoorSide.North, GridTransforms.RotateSide(DoorSide.West, Rotation90.R90));
         }
     }

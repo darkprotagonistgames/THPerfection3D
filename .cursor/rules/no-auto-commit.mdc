@@ -1,0 +1,26 @@
+---
+description: Do not commit or push unless the user explicitly asks
+alwaysApply: true
+---
+
+# No auto-commit (local work)
+
+When working in this repo locally, **do not commit or push** unless the user explicitly asks.
+
+## Do not
+
+- Commit after finishing a task, fix, or feature
+- Push to remote "to save work" or update a PR branch
+- Offer to commit proactively at the end of a response
+- Amend, rebase, or create branches for git housekeeping unless requested
+
+## Do
+
+- Make file edits and leave changes unstaged / uncommitted
+- Tell the user what changed and that they can commit when ready
+- Run `git status` or `git diff` when useful for debugging or summarizing — read-only is fine
+- Commit **only** when the user clearly asks (e.g. "commit this", "check in the plan", "push to level_gen")
+
+## If unclear
+
+Ask once: "Want me to commit these changes?" — default is **no commit**.

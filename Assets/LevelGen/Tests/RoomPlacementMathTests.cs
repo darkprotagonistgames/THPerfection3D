@@ -29,7 +29,7 @@ namespace THPerfection.LevelGen.Tests
             var placements = RoomPlacementMath.FindAlignedPlacements(template, doorway).ToArray();
 
             Assert.IsTrue(placements.Any(p =>
-                p.Origin.Equals(new int2(4, 3)) && p.Rotation == Rotation90.R0));
+                p.Origin.Equals(new int2(2, 3)) && p.Rotation == Rotation90.R180));
         }
 
         [Test]

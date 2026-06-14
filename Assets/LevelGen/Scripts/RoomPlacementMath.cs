@@ -24,7 +24,7 @@ namespace THPerfection.LevelGen
         }
 
         public static IEnumerable<DoorSocket> GetWorldDoorSockets(
-            in RoomTemplateDefinition template,
+            RoomTemplateDefinition template,
             int2 origin,
             Rotation90 rotation)
         {
@@ -48,8 +48,8 @@ namespace THPerfection.LevelGen
                 isMainDoor: true);
 
         public static IEnumerable<AlignedPlacement> FindAlignedPlacements(
-            in RoomTemplateDefinition template,
-            in DoorwaySlot targetDoorway)
+            RoomTemplateDefinition template,
+            DoorwaySlot targetDoorway)
         {
             int2 expansionCell = targetDoorway.ExpansionCell;
             DoorSide requiredMainSide = GridTransforms.Opposite(targetDoorway.Side);
