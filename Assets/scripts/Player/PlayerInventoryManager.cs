@@ -27,7 +27,11 @@ public class PlayerInventoryManager : MonoBehaviour
     EntityQuery _catalogQuery;
     EntityQuery _activeWeaponQuery;
     bool _ready;
+    bool _catalogMissingLogged;
     int _activeSlotIndex = -1;
+
+    const float CatalogWaitTimeoutSeconds = 10f;
+    float _catalogWaitStartTime;
 
     void OnEnable()
     {
@@ -67,21 +71,32 @@ public class PlayerInventoryManager : MonoBehaviour
             ComponentType.ReadOnly<PlayerWeaponPrefabEntry>());
         _activeWeaponQuery = _entityManager.CreateEntityQuery(
             ComponentType.ReadOnly<ActivePlayerWeaponTag>());
-
-        if (_catalogQuery.IsEmpty)
-        {
-            Debug.LogError(
-                "[PlayerInventoryManager] No baked weapon catalog found. " +
-                "Add PlayerWeaponCatalogAuthoring to a GameObject in your ECS subscene and assign weapon prefabs.");
-            return;
-        }
-
-        _ready = true;
+        _catalogWaitStartTime = Time.realtimeSinceStartup;
     }
 
     void Update()
     {
-        if (!_ready || _actions == null)
+        if (!_ready)
+        {
+            if (_catalogQuery.IsEmpty)
+            {
+                if (!_catalogMissingLogged
+                    && Time.realtimeSinceStartup - _catalogWaitStartTime >= CatalogWaitTimeoutSeconds)
+                {
+                    _catalogMissingLogged = true;
+                    Debug.LogError(
+                        "[PlayerInventoryManager] No baked weapon catalog found after subscene load. " +
+                        "Add PlayerWeaponCatalogAuthoring to a GameObject in your ECS subscene, assign weapon prefabs, " +
+                        "then close the subscene and rebake (Entities > Baking > Bake Scene or save the subscene).");
+                }
+
+                return;
+            }
+
+            _ready = true;
+        }
+
+        if (_actions == null)
             return;
 
         for (int i = 0; i < _attackActions.Length; i++)
