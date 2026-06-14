@@ -40,6 +40,37 @@ namespace THPerfection.LevelGen.Editor
             }
             EditorGUILayout.EndHorizontal();
 
+            EditorGUILayout.BeginHorizontal();
+            if (GUILayout.Button("Spawn Visuals"))
+            {
+                view.SpawnVisuals();
+                SceneView.RepaintAll();
+            }
+
+            if (GUILayout.Button("Clear Visuals"))
+            {
+                view.ClearVisuals();
+                SceneView.RepaintAll();
+            }
+            EditorGUILayout.EndHorizontal();
+
+            EditorGUILayout.Space(8f);
+            EditorGUILayout.LabelField("Visual Spawn", EditorStyles.boldLabel);
+            EditorGUILayout.PropertyField(serializedObject.FindProperty("SpawnVisualsOnGenerate"));
+
+            var spawner = view.RoomSpawner;
+            if (spawner != null)
+            {
+                using (var so = new SerializedObject(spawner))
+                {
+                    so.Update();
+                    EditorGUILayout.PropertyField(so.FindProperty("DefaultRoomPrefab"));
+                    EditorGUILayout.PropertyField(so.FindProperty("PrefabMappings"), true);
+                    EditorGUILayout.PropertyField(so.FindProperty("UseProceduralFallback"));
+                    so.ApplyModifiedProperties();
+                }
+            }
+
             EditorGUILayout.Space(8f);
             EditorGUILayout.LabelField("Config", EditorStyles.boldLabel);
             EditorGUILayout.PropertyField(serializedObject.FindProperty("Config"), includeChildren: true);

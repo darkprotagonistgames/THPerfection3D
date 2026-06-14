@@ -15,6 +15,9 @@ namespace THPerfection.LevelGen
         [Tooltip("Used when Randomize Seed On Generate is disabled. Reusable for reproducible layouts.")]
         public uint Seed = 1;
 
+        [Header("Visual Spawn")]
+        public bool SpawnVisualsOnGenerate = true;
+
         [Header("Gizmo Colors")]
         public Color RoomFillColor = new(0.2f, 0.45f, 0.85f, 0.25f);
         public Color OpenDoorColor = new(1f, 0.85f, 0.1f, 1f);
@@ -26,8 +29,32 @@ namespace THPerfection.LevelGen
         [SerializeField] int _openFrontierCount;
 
         BuildingGenerationResult _result;
+        LevelGenRoomSpawner _roomSpawner;
 
         public BuildingGenerationResult Result => _result;
+
+        void Reset()
+        {
+            EnsureRoomSpawner();
+        }
+
+        void EnsureRoomSpawner()
+        {
+            if (_roomSpawner == null)
+                _roomSpawner = GetComponent<LevelGenRoomSpawner>();
+
+            if (_roomSpawner == null)
+                _roomSpawner = gameObject.AddComponent<LevelGenRoomSpawner>();
+        }
+
+        public LevelGenRoomSpawner RoomSpawner
+        {
+            get
+            {
+                EnsureRoomSpawner();
+                return _roomSpawner;
+            }
+        }
 
         [ContextMenu("Randomize Seed")]
         public void RandomizeSeed()
@@ -47,6 +74,30 @@ namespace THPerfection.LevelGen
             _roomCount = _result.Instances.Count;
             _openFrontierCount = _result.OpenFrontier.Count;
             Debug.Log($"[LevelGen] Seed {Seed}: {_roomCount} rooms, {_openFrontierCount} open doorways.");
+
+            if (SpawnVisualsOnGenerate)
+                SpawnVisuals(catalog);
+        }
+
+        public void SpawnVisuals()
+        {
+            SpawnVisuals(RoomCatalog.CreateDefaultMainFloor());
+        }
+
+        public void SpawnVisuals(RoomCatalog catalog)
+        {
+            if (_result == null)
+            {
+                Debug.LogWarning("[LevelGen] Generate a floor before spawning visuals.");
+                return;
+            }
+
+            RoomSpawner.Spawn(_result, Config, catalog);
+        }
+
+        public void ClearVisuals()
+        {
+            RoomSpawner.ClearSpawned();
         }
 
         void OnDrawGizmosSelected()
@@ -79,37 +130,11 @@ namespace THPerfection.LevelGen
                         _                       => ClosedDoorColor,
                     };
 
-                    Vector3 edgeCenter = DoorEdgeCenter(key.Cell, key.Side, cellSize, doorY);
-                    Vector3 edgeSize = DoorEdgeSize(key.Side, cellSize);
+                    Vector3 edgeCenter = LevelGenWorldTransform.DoorEdgeCenter(key.Cell, key.Side, cellSize, doorY);
+                    Vector3 edgeSize = LevelGenWorldTransform.DoorEdgeSize(key.Side, cellSize);
                     Gizmos.DrawCube(edgeCenter, edgeSize);
                 }
             }
-        }
-
-        static Vector3 DoorEdgeCenter(int2 cell, DoorSide side, float cellSize, float y)
-        {
-            float cx = cell.x * cellSize;
-            float cz = cell.y * cellSize;
-            const float inset = 0.5f;
-
-            return side switch
-            {
-                DoorSide.North => new Vector3(cx, y, cz + cellSize * inset),
-                DoorSide.South => new Vector3(cx, y, cz - cellSize * inset),
-                DoorSide.East  => new Vector3(cx + cellSize * inset, y, cz),
-                DoorSide.West  => new Vector3(cx - cellSize * inset, y, cz),
-                _              => new Vector3(cx, y, cz),
-            };
-        }
-
-        static Vector3 DoorEdgeSize(DoorSide side, float cellSize)
-        {
-            const float thickness = 0.15f;
-            const float span = 0.7f;
-
-            return side is DoorSide.North or DoorSide.South
-                ? new Vector3(cellSize * span, 0.2f, cellSize * thickness)
-                : new Vector3(cellSize * thickness, 0.2f, cellSize * span);
         }
     }
 }

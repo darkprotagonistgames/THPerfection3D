@@ -52,5 +52,20 @@ namespace THPerfection.LevelGen
 
             return catalog;
         }
+
+        public bool TryGetTemplate(string templateId, out RoomTemplateDefinition template)
+        {
+            for (int i = 0; i < _entries.Count; i++)
+            {
+                if (_entries[i].Template.TemplateId == templateId)
+                {
+                    template = _entries[i].Template;
+                    return true;
+                }
+            }
+
+            template = default;
+            return false;
+        }
     }
 }
