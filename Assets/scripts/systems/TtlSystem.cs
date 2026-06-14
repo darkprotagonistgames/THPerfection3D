@@ -22,7 +22,8 @@ public partial struct TtlSystem : ISystem
     public void OnUpdate(ref SystemState state)
     {
         float deltaTime = SystemAPI.Time.DeltaTime;
-        var ecb = new EntityCommandBuffer(Allocator.Temp);
+        var ecb = SystemAPI.GetSingleton<EndSimulationEntityCommandBufferSystem.Singleton>()
+            .CreateCommandBuffer(state.WorldUnmanaged);
 
         foreach (var (ttl, entity) in SystemAPI.Query<RefRW<TtlData>>().WithEntityAccess())
         {
@@ -30,8 +31,5 @@ public partial struct TtlSystem : ISystem
             if (ttl.ValueRO.SecondsRemaining <= 0f)
                 ecb.DestroyEntity(entity);
         }
-
-        ecb.Playback(state.EntityManager);
-        ecb.Dispose();
     }
 }

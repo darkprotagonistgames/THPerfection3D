@@ -213,7 +213,7 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &1369661128
+--- !u!1 &936851134
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -221,57 +221,42 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 1369661131}
-  - component: {fileID: 1369661130}
-  - component: {fileID: 1369661129}
+  - component: {fileID: 936851136}
+  - component: {fileID: 936851135}
   m_Layer: 0
-  m_Name: GameObject
+  m_Name: wepons
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &1369661129
+--- !u!114 &936851135
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1369661128}
+  m_GameObject: {fileID: 936851134}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 58648b76fc11c2b4a96cdff1ed71aef8, type: 3}
+  m_Script: {fileID: 11500000, guid: 2a6330fa67b9e8848bed6f06e0c6ca3e, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: THPerfection3D::ConeAttackAuthoring
-  ConeAttackPrefab: {fileID: 7373220452427547284, guid: de3181b72c9abf545a73d733478e780f, type: 3}
-  Range: 8
-  ConeAngleDegrees: 90
-  TargetLayers:
-    serializedVersion: 2
-    m_Bits: 256
-  Cooldown: 1
---- !u!114 &1369661130
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1369661128}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5826eeb426f79b14aa0ffe010e8eb811, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: THPerfection3D::SnapToPlayerAuthoring
---- !u!4 &1369661131
+  m_EditorClassIdentifier: THPerfection3D::PlayerWeaponCatalogAuthoring
+  Slots:
+  - WeaponSystemPrefab: {fileID: 1577290163218352791, guid: f2268a9049cb1bd4fa733167edd07aa3, type: 3}
+  - WeaponSystemPrefab: {fileID: 1577290163218352791, guid: f2268a9049cb1bd4fa733167edd07aa3, type: 3}
+  - WeaponSystemPrefab: {fileID: 1577290163218352791, guid: 0f12913b672816b4e938f541051687ab, type: 3}
+  - WeaponSystemPrefab: {fileID: 1577290163218352791, guid: 0f12913b672816b4e938f541051687ab, type: 3}
+--- !u!4 &936851136
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1369661128}
+  m_GameObject: {fileID: 936851134}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 1, y: 0, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -523,9 +508,9 @@ PrefabInstance:
 SceneRoots:
   m_ObjectHideFlags: 0
   m_Roots:
-  - {fileID: 1369661131}
   - {fileID: 4231293328008340884}
   - {fileID: 1382262150}
   - {fileID: 823207007}
   - {fileID: 1521495406}
   - {fileID: 603575831}
+  - {fileID: 936851136}

@@ -15,7 +15,8 @@ public partial class DeathSystem : SystemBase
 {
     protected override void OnUpdate()
     {
-        var ecb = new EntityCommandBuffer(Allocator.Temp);
+        var ecb = SystemAPI.GetSingleton<EndSimulationEntityCommandBufferSystem.Singleton>()
+            .CreateCommandBuffer(World.Unmanaged);
         var keepTagLookup = SystemAPI.GetComponentLookup<KeepAfterDeathTag>(true);
         var childLookup = SystemAPI.GetBufferLookup<Child>(true);
         keepTagLookup.Update(this);
@@ -40,8 +41,5 @@ public partial class DeathSystem : SystemBase
 
             DeathHierarchyUtility.PreserveVisualAndDestroyCharacter(dead, keepEntity, EntityManager, ecb);
         }
-
-        ecb.Playback(EntityManager);
-        ecb.Dispose();
     }
 }
