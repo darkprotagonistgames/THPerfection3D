@@ -1,6 +1,8 @@
 # Level generator plan — office building
 
-Authoritative design for procedural office-building layout: three floors (basement, main, attic), grid-based polyomino rooms, doorway-driven expansion, and prefab-based authoring. Read this before implementing level generation, room templates, or building spawn systems.
+Authoritative design for procedural office-building layout: **grid-based polyomino rooms**, doorway-driven expansion, and prefab-based authoring. Read this before implementing level generation, room templates, or building spawn systems.
+
+**Beta scope:** one playable floor (**Main**). **Multi-floor** (basement, main, attic, vertical links) is a **post-beta feature** — deferred to much later development, but types and data layout should stay ready for it.
 
 Related: [GameDesign.md](GameDesign.md) (persistent run world, ECS, no round-end map wipes).
 
@@ -8,7 +10,9 @@ Related: [GameDesign.md](GameDesign.md) (persistent run world, ECS, no round-end
 
 ## Goals
 
-- Generate an **office building** with **three floors**: basement, main, attic.
+- Generate an **office building** layout on a square grid with **doorway-driven expansion**.
+- **Beta:** generate and play on the **main floor only** (`TargetRoomCount` on Main).
+- **Later (post-beta):** add **basement** and **attic** floors connected by vertical-link room templates; same generator loop, per-floor occupancy.
 - Start on **main floor** with a **random seed room**, then expand for a **configurable room count**.
 - Each step: pick an **open doorway** on the frontier → pick and place a room whose **main door aligns** with that doorway.
 - Room shapes are **polyominoes** on a square grid; track **used coordinates per floor** to prevent overlap.
@@ -16,6 +20,21 @@ Related: [GameDesign.md](GameDesign.md) (persistent run world, ECS, no round-end
 - **Room types control their own selection weight**; a shared base returns **0** on hard invalid placements (overlap, misaligned main door, door into wall).
 - At generation end, **room prefabs receive door states** (`Connected` / `Closed` / `Open`). **`Open` edges remain valid** attachment points for later generation passes (events, additive wings).
 - **No building bounds** in the generator; rooms own **camera anchor** and **spawn point** placeholders (existing systems are dev placeholders).
+
+---
+
+## Beta vs later features
+
+| Area | Beta | Post-beta (design now, implement later) |
+|------|------|----------------------------------------|
+| Playable floors | **Main only** | Basement + attic expansion passes |
+| Generator entry | `GenerateMainFloor` | Multi-floor orchestrator after vertical links exist |
+| Room catalog | Main-floor templates | Floor-masked templates + stair/shaft/elevator links |
+| Occupancy API | `BuildingOccupancy` per `FloorId` (Main used) | Same API; all floors populated |
+| Vertical links | Not required for beta gameplay | Shared `(x, z)` across floors; link room opens basement/attic frontiers |
+| Prefab authoring | `AllowedFloors` on templates | Same field — tag basement-only / attic-only rooms early |
+
+**Design rule:** keep `FloorId`, `FloorMask`, per-floor grids, and `AllowedFloors` in templates even while beta only generates Main. Do not fold everything into a single-floor-only model that would require a breaking refactor later.
 
 ---
 
@@ -42,10 +61,10 @@ flowchart TD
 
 - Gameplay plane: **XZ** (Y is up). See `TopDownPlane` and model-forward **-Z** when authoring room facings.
 - **Cell**: `int2` grid position on a floor.
-- **FloorId**: `Basement`, `Main`, `Attic`.
+- **FloorId**: `Basement`, `Main`, `Attic` — **all three exist in code/types from the start**; beta generation and gameplay use **`Main` only**.
 - World position: `TopDownPlane.ToPosition(cell * CellSize, floorY)`.
-- **Overlapping floors are allowed**: the same `(x, z)` may be occupied on different floors. Occupancy is **per floor only**, not a global 3D voxel grid.
-- Vertical links (stairs, elevator, shaft) are room templates that agree on `(x, z)` across floors.
+- **Overlapping floors are allowed** (future): the same `(x, z)` may be occupied on different floors. Occupancy is **per floor only**, not a global 3D voxel grid. Beta does not populate other floors yet.
+- **Later:** vertical links (stairs, elevator, shaft) are room templates that agree on `(x, z)` across floors and seed basement/attic frontiers.
 
 ---
 
@@ -104,15 +123,15 @@ RoomInstance {
 | `MaxPlacementAttempts` | Per doorway before marking dead |
 | `DoorAlignBonus` / `WallBlockPenalty` | Soft weight multipliers (on evaluators) |
 | `Seed` | Deterministic runs |
-| `FloorMode` | Main-first spine, then basement/attic via vertical links |
+| `FloorMode` | **Beta:** Main only. **Later:** Main-first spine, then basement/attic via vertical links |
 
-### Phase 1 — Seed (main floor)
+### Phase 1 — Seed (main floor) — **beta + later**
 
 1. Filter templates allowed on `Main`.
 2. Weighted pick by `EvaluatePlacement` (seed context: no target doorway; only hard rules + base weight).
 3. Place at chosen origin; stamp cells; enqueue all outward door sockets.
 
-### Phase 2 — Expand until budget exhausted
+### Phase 2 — Expand until budget exhausted — **beta + later**
 
 For each iteration:
 
@@ -137,14 +156,18 @@ For each iteration:
 - Penalty when a door would face a wall (usually already hard-zero).
 - Tag affinity (corridor → break room), branch vs loop preferences, etc.
 
-### Phase 3 — Multi-floor
+### Phase 3 — Multi-floor — **post-beta (deferred)**
 
-Recommended v1:
+Not required for beta. Likely returned to **much later** in development after core main-floor loop, prefabs, and run integration are stable.
+
+When implemented:
 
 1. Expand **main floor** first (including stair/shaft room types).
 2. Run the same expand loop on **basement** and **attic** starting from doorways created by vertical-link rooms (shared `(x, z)`).
 
-### Phase 4 — End of pass
+Until then: keep `BuildingOccupancy`, `FloorId`, and `AllowedFloors` in place; do not remove basement/attic from enums or tests that verify per-floor isolation.
+
+### Phase 4 — End of pass — **beta + later**
 
 For each room instance, classify every outward socket:
 
@@ -288,13 +311,15 @@ struct RoomInstancePayload : IComponentData
 
 ## Suggested implementation phases
 
-| Phase | Deliverable |
-|-------|-------------|
-| **1** | Per-floor grid, polyomino rotation, `RoomTemplateBase` hard zeros, unit tests |
-| **2** | Main-floor expansion, end-pass door classification, debug Gizmos |
-| **3** | Basement + attic + vertical link templates |
-| **4** | Prefab authoring components, baker, catalog, spawn + bootstrap |
-| **5** | Re-entry frontier from `Open` edges; hook into run start / events |
+| Phase | Scope | Deliverable |
+|-------|--------|-------------|
+| **1** | Beta | Per-floor grid, polyomino rotation, `RoomTemplateBase` hard zeros, unit tests (`FloorId` types included) |
+| **2** | Beta | Main-floor expansion, end-pass door classification, debug Gizmos |
+| **3** | Beta | Prefab authoring components, baker, catalog, spawn + bootstrap |
+| **4** | Beta | Re-entry frontier from `Open` edges; hook into run start / events |
+| **5** | **Post-beta** | Basement + attic + vertical link templates; multi-floor orchestrator |
+
+Phases 1–4 ship the playable **single-floor** building for beta. Phase 5 revisits multi-floor when the team is ready — the plan and code should not block that add-on.
 
 ---
 
@@ -327,7 +352,9 @@ Assets/LevelGen/
 
 | Topic | Decision |
 |-------|----------|
-| Floor overlap | Allowed — occupancy per `FloorId` |
+| Beta floors | **Main only** for generation and gameplay |
+| Multi-floor | **Post-beta** — types/API designed now; basement/attic expansion later |
+| Floor overlap | Allowed in model — occupancy per `FloorId` |
 | Gen end doors | Prefabs get `Closed` vs `Connected`; `Open` kept for later loops |
 | Bounds | Not in generator; anchors/spawns on room prefabs |
 | Probability | Room evaluators return 0 on hard failure; orchestrator only weighted-picks |

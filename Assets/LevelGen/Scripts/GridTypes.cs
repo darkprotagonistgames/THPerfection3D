@@ -52,5 +52,6 @@ namespace THPerfection.LevelGen
         Overlap,
         MainDoorMisaligned,
         DoorIntoWall,
+        DeadEndWhenFrontierLow,
     }
 }

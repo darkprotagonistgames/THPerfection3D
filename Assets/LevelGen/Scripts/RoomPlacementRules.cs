@@ -4,6 +4,76 @@ namespace THPerfection.LevelGen
 {
     public static class RoomPlacementRules
     {
+        /// <summary>
+        /// True when no occupied cell lies on the grid ray from the door socket outward.
+        /// A door whose ray hits another room at any distance is not a viable expansion doorway.
+        /// </summary>
+        public static bool HasClearExpansionRay(FloorGrid grid, int2 doorCell, DoorSide side)
+        {
+            int2 dir = GridTransforms.Direction(side);
+            int maxSteps = MaxOccupiedStepsAlongRay(grid, doorCell, dir);
+
+            for (int step = 1; step <= maxSteps; step++)
+            {
+                if (grid.IsOccupied(doorCell + dir * step))
+                    return false;
+            }
+
+            return true;
+        }
+
+        static int MaxOccupiedStepsAlongRay(FloorGrid grid, int2 origin, int2 dir)
+        {
+            int maxStep = 0;
+
+            foreach (int2 cell in grid.Cells.Keys)
+            {
+                int2 delta = cell - origin;
+
+                if (dir.x != 0)
+                {
+                    if (delta.y != 0)
+                        continue;
+
+                    int signed = delta.x * dir.x;
+                    if (signed <= 0)
+                        continue;
+
+                    maxStep = math.max(maxStep, signed);
+                }
+                else
+                {
+                    if (delta.x != 0)
+                        continue;
+
+                    int signed = delta.y * dir.y;
+                    if (signed <= 0)
+                        continue;
+
+                    maxStep = math.max(maxStep, signed);
+                }
+            }
+
+            return math.max(maxStep, 1);
+        }
+
+        /// <summary>
+        /// True when the cell immediately outside the door is occupied by another room
+        /// that has no matching door on the shared edge (a wall contact).
+        /// </summary>
+        public static bool FacesAdjacentWall(FloorGrid grid, int2 doorCell, DoorSide side)
+        {
+            int2 neighbor = doorCell + GridTransforms.Direction(side);
+
+            if (!grid.IsOccupied(neighbor))
+                return false;
+
+            if (!grid.TryGet(neighbor, out OccupiedCell occupied))
+                return true;
+
+            return !GridTransforms.HasDoor(occupied.Doors, GridTransforms.Opposite(side));
+        }
+
         public static bool TryValidate(
             in PlacementContext ctx,
             in RoomTemplateDefinition template,
@@ -40,7 +110,53 @@ namespace THPerfection.LevelGen
                 return false;
             }
 
+            if (ctx.RequiresExpansionDoor
+                && CountNewOpenDoorways(ctx, template, origin, rotation) == 0)
+            {
+                failure = PlacementFailure.DeadEndWhenFrontierLow;
+                return false;
+            }
+
             return true;
+        }
+
+        public static int CountNewOpenDoorways(
+            in PlacementContext ctx,
+            in RoomTemplateDefinition template,
+            int2 origin,
+            Rotation90 rotation)
+        {
+            int count = 0;
+
+            foreach (DoorSocket socket in RoomPlacementMath.GetWorldDoorSockets(template, origin, rotation))
+            {
+                if (IsConnectedMainOrTargetDoor(ctx, template, origin, rotation, in socket))
+                    continue;
+
+                // Only clear-ray doors count toward the minimum expansion doorway budget.
+                if (HasClearExpansionRay(ctx.Grid, socket.Cell, socket.Side))
+                    count++;
+            }
+
+            return count;
+        }
+
+        static bool IsConnectedMainOrTargetDoor(
+            in PlacementContext ctx,
+            in RoomTemplateDefinition template,
+            int2 origin,
+            Rotation90 rotation,
+            in DoorSocket socket)
+        {
+            if (!ctx.HasTargetDoorway)
+                return false;
+
+            DoorwaySlot target = ctx.TargetDoorway.Value;
+            if (socket.Cell.Equals(target.Cell) && socket.Side == target.Side)
+                return true;
+
+            DoorSocket mainDoor = RoomPlacementMath.GetWorldMainDoor(template, origin, rotation);
+            return socket.Cell.Equals(mainDoor.Cell) && socket.Side == mainDoor.Side;
         }
 
         public static float ApplyHardRules(

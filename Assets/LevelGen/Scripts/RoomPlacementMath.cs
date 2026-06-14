@@ -78,5 +78,29 @@ namespace THPerfection.LevelGen
             return worldMain.Cell.Equals(targetDoorway.ExpansionCell)
                 && worldMain.Side == GridTransforms.Opposite(targetDoorway.Side);
         }
+
+        /// <summary>
+        /// Door sockets that face outward (outside the template footprint) into unoccupied space.
+        /// </summary>
+        public static int CountOutwardDoorSockets(
+            in RoomTemplateDefinition template,
+            int2 origin,
+            Rotation90 rotation,
+            FloorGrid grid)
+        {
+            var templateCells = new System.Collections.Generic.HashSet<int2>();
+            foreach (int2 cell in GetWorldCells(template.Cells, origin, rotation))
+                templateCells.Add(cell);
+
+            int count = 0;
+            foreach (DoorSocket socket in GetWorldDoorSockets(template, origin, rotation))
+            {
+                int2 neighbor = socket.Cell + GridTransforms.Direction(socket.Side);
+                if (!templateCells.Contains(neighbor) && !grid.IsOccupied(neighbor))
+                    count++;
+            }
+
+            return count;
+        }
     }
 }
