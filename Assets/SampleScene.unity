@@ -131,7 +131,6 @@ GameObject:
   - component: {fileID: 165882352}
   - component: {fileID: 165882351}
   - component: {fileID: 165882354}
-  - component: {fileID: 165882356}
   - component: {fileID: 165882355}
   m_Layer: 0
   m_Name: Main Camera
@@ -272,18 +271,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: THPerfection3D::MainGameObjectCamera
   PositionSmoothTime: 0.2
   RotationSmoothTime: 0.2
---- !u!114 &165882356
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 165882350}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e8a9c75b847e7624aa346d1893d71c2b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: THPerfection3D::MainEntityCameraAuthoring
 --- !u!1 &603575829
 GameObject:
   m_ObjectHideFlags: 0
@@ -346,8 +333,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 823207008}
-  - component: {fileID: 823207007}
-  - component: {fileID: 823207006}
   m_Layer: 0
   m_Name: PlayerProxy
   m_TagString: Untagged
@@ -355,30 +340,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &823207006
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 823207005}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9523b8f839a63a847bb0e9afb8c4d2c8, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: THPerfection3D::PlayerTransformSync
---- !u!114 &823207007
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 823207005}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9ff222b8e9589e74bb0dadeb64922e61, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: THPerfection3D::PlayerSingleton
 --- !u!4 &823207008
 Transform:
   m_ObjectHideFlags: 0
@@ -497,6 +458,50 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 0}
+--- !u!1 &1471147713
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1471147715}
+  - component: {fileID: 1471147714}
+  m_Layer: 0
+  m_Name: playerInput
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1471147714
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1471147713}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d7165a122e3385447a0b7026f3b07e9c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: THPerfection3D::PlayerInventoryManager
+--- !u!4 &1471147715
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1471147713}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 2, z: -8}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1521495404
 GameObject:
   m_ObjectHideFlags: 0
@@ -704,3 +709,4 @@ SceneRoots:
   - {fileID: 823207008}
   - {fileID: 902263798}
   - {fileID: 603575831}
+  - {fileID: 1471147715}
