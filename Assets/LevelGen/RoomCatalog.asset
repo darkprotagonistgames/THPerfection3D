@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e2cfec667a76aae46b7f3e1e2d57fa23, type: 3}
   m_Name: RoomCatalog
   m_EditorClassIdentifier: THPerfection.LevelGen::THPerfection.LevelGen.RoomCatalogAsset
-  IncludeBuiltinFallback: 1
+  IncludeBuiltinFallback: 0
   Entries:
   - RoomPrefab: {fileID: 5142438548056791410, guid: 715a14b0e8372f84aa991fee2f8715a2, type: 3}
     EvaluatorOverride: {fileID: 0}
