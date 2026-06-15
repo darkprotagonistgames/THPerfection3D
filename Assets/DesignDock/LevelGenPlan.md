@@ -321,6 +321,8 @@ struct RoomInstancePayload : IComponentData
 
 Phases 1–4 ship the playable **single-floor** building for beta. Phase 5 revisits multi-floor when the team is ready — the plan and code should not block that add-on.
 
+**Follow-up after beta:** [SpatialOccupancyPlan.md](SpatialOccupancyPlan.md) — runtime per-entity grid cell and room tracking from transforms, change signals for pathfinding and camera-on-room-change.
+
 ---
 
 ## Proposed file layout (implementation)
