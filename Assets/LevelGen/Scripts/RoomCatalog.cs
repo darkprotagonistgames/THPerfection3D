@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using UnityEngine;
 
 namespace THPerfection.LevelGen
 {
@@ -6,11 +7,16 @@ namespace THPerfection.LevelGen
     {
         public readonly RoomTemplateDefinition Template;
         public readonly IRoomPlacementEvaluator Evaluator;
+        public readonly GameObject Prefab;
 
-        public RoomCatalogEntry(RoomTemplateDefinition template, IRoomPlacementEvaluator evaluator = null)
+        public RoomCatalogEntry(
+            RoomTemplateDefinition template,
+            IRoomPlacementEvaluator evaluator = null,
+            GameObject prefab = null)
         {
             Template   = template;
             Evaluator  = evaluator ?? HardRulesOnlyEvaluator.Instance;
+            Prefab     = prefab;
         }
     }
 
@@ -55,16 +61,40 @@ namespace THPerfection.LevelGen
 
         public bool TryGetTemplate(string templateId, out RoomTemplateDefinition template)
         {
+            if (TryGetEntry(templateId, out RoomCatalogEntry entry))
+            {
+                template = entry.Template;
+                return true;
+            }
+
+            template = default;
+            return false;
+        }
+
+        public bool TryGetEntry(string templateId, out RoomCatalogEntry entry)
+        {
             for (int i = 0; i < _entries.Count; i++)
             {
                 if (_entries[i].Template.TemplateId == templateId)
                 {
-                    template = _entries[i].Template;
+                    entry = _entries[i];
                     return true;
                 }
             }
 
-            template = default;
+            entry = default;
+            return false;
+        }
+
+        public bool TryGetPrefab(string templateId, out GameObject prefab)
+        {
+            if (TryGetEntry(templateId, out RoomCatalogEntry entry) && entry.Prefab != null)
+            {
+                prefab = entry.Prefab;
+                return true;
+            }
+
+            prefab = null;
             return false;
         }
     }

@@ -2,7 +2,8 @@
     "name": "THPerfection.LevelGen.Editor",
     "rootNamespace": "THPerfection.LevelGen.Editor",
     "references": [
-        "THPerfection.LevelGen"
+        "THPerfection.LevelGen",
+        "Unity.Mathematics"
     ],
     "includePlatforms": [
         "Editor"

@@ -6,6 +6,10 @@ namespace THPerfection.LevelGen
     [DisallowMultipleComponent]
     public sealed class LevelGenDebugView : MonoBehaviour
     {
+        [Header("Catalog")]
+        [Tooltip("Authored room prefabs baked at generate time. When null, uses builtin templates only.")]
+        public RoomCatalogAsset CatalogAsset;
+
         [Header("Generation")]
         public BuildingGenConfig Config = BuildingGenConfig.Default;
 
@@ -30,8 +34,10 @@ namespace THPerfection.LevelGen
 
         BuildingGenerationResult _result;
         LevelGenRoomSpawner _roomSpawner;
+        RoomCatalog _lastCatalog;
 
         public BuildingGenerationResult Result => _result;
+        public RoomCatalog LastCatalog => _lastCatalog;
 
         void Reset()
         {
@@ -69,19 +75,22 @@ namespace THPerfection.LevelGen
                 RandomizeSeed();
 
             Config.Seed = Seed;
-            RoomCatalog catalog = RoomCatalog.CreateDefaultMainFloor();
-            _result = OfficeBuildingGenerator.GenerateMainFloor(Config, catalog);
+            _lastCatalog = ResolveCatalog();
+            _result = OfficeBuildingGenerator.GenerateMainFloor(Config, _lastCatalog);
             _roomCount = _result.Instances.Count;
             _openFrontierCount = _result.OpenFrontier.Count;
             Debug.Log($"[LevelGen] Seed {Seed}: {_roomCount} rooms, {_openFrontierCount} open doorways.");
 
             if (SpawnVisualsOnGenerate)
-                SpawnVisuals(catalog);
+                SpawnVisuals(_lastCatalog);
         }
+
+        public RoomCatalog ResolveCatalog() =>
+            CatalogAsset != null ? CatalogAsset.BuildCatalog() : RoomCatalog.CreateDefaultMainFloor();
 
         public void SpawnVisuals()
         {
-            SpawnVisuals(RoomCatalog.CreateDefaultMainFloor());
+            SpawnVisuals(_lastCatalog ?? ResolveCatalog());
         }
 
         public void SpawnVisuals(RoomCatalog catalog)

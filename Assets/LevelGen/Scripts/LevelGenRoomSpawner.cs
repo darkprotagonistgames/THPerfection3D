@@ -1,3 +1,4 @@
+using THPerfection.LevelGen.Authoring;
 using System.Collections.Generic;
 using Unity.Mathematics;
 using UnityEngine;
@@ -11,8 +12,14 @@ namespace THPerfection.LevelGen
     [DisallowMultipleComponent]
     public sealed class LevelGenRoomSpawner : MonoBehaviour
     {
-        [Header("Prefab Mapping")]
-        [Tooltip("Fallback when no template-specific prefab is mapped.")]
+        [Header("Colors")]
+        public Color FloorColor = new(0.55f, 0.55f, 0.58f, 1f);
+        public Color OpenDoorColor = new(1f, 0.85f, 0.1f, 1f);
+        public Color ConnectedDoorColor = new(0.2f, 0.9f, 0.35f, 1f);
+        public Color ClosedDoorColor = new(0.85f, 0.25f, 0.2f, 1f);
+
+        [Header("Legacy Prefab Mapping (optional)")]
+        [Tooltip("Used when catalog entry has no prefab.")]
         public GameObject DefaultRoomPrefab;
 
         public RoomPrefabMapping[] PrefabMappings = System.Array.Empty<RoomPrefabMapping>();
@@ -21,12 +28,7 @@ namespace THPerfection.LevelGen
         [Tooltip("When no prefab is available, build floor tiles and door markers from grid data.")]
         public bool UseProceduralFallback = true;
 
-        [Header("Colors")]
-        public Color FloorColor = new(0.55f, 0.55f, 0.58f, 1f);
-        public Color OpenDoorColor = new(1f, 0.85f, 0.1f, 1f);
-        public Color ConnectedDoorColor = new(0.2f, 0.9f, 0.35f, 1f);
-        public Color ClosedDoorColor = new(0.85f, 0.25f, 0.2f, 1f);
-
+        RoomCatalog _activeCatalog;
         Transform _spawnRoot;
 
         public Transform SpawnRoot
@@ -64,6 +66,7 @@ namespace THPerfection.LevelGen
             in BuildingGenConfig config,
             RoomCatalog catalog)
         {
+            _activeCatalog = catalog;
             ClearSpawned();
 
             if (result?.Instances == null || result.Instances.Count == 0)
@@ -96,6 +99,7 @@ namespace THPerfection.LevelGen
             roomRoot.transform.rotation = LevelGenWorldTransform.RoomRootRotation(instance.Rotation);
 
             GameObject prefab = ResolvePrefab(instance.TemplateId);
+            DoorSocketMarker[] doorMarkers = null;
             LevelGenRoomVisualAuthoring visualAuthoring = null;
 
             if (prefab != null)
@@ -103,6 +107,7 @@ namespace THPerfection.LevelGen
                 GameObject art = Instantiate(prefab, roomRoot.transform);
                 art.transform.localPosition = Vector3.zero;
                 art.transform.localRotation = Quaternion.identity;
+                doorMarkers = art.GetComponentsInChildren<DoorSocketMarker>(true);
                 visualAuthoring = art.GetComponentInChildren<LevelGenRoomVisualAuthoring>();
             }
             else if (UseProceduralFallback)
@@ -110,7 +115,12 @@ namespace THPerfection.LevelGen
                 BuildProceduralFloor(roomRoot.transform, in template, cellSize);
             }
 
-            if (visualAuthoring != null)
+            if (doorMarkers != null && doorMarkers.Length > 0)
+            {
+                foreach (DoorSocketMarker marker in doorMarkers)
+                    marker.ApplyFromInstance(instance);
+            }
+            else if (visualAuthoring != null)
             {
                 visualAuthoring.ApplyFromInstance(instance);
             }
@@ -122,6 +132,9 @@ namespace THPerfection.LevelGen
 
         GameObject ResolvePrefab(string templateId)
         {
+            if (_activeCatalog != null && _activeCatalog.TryGetPrefab(templateId, out GameObject catalogPrefab))
+                return catalogPrefab;
+
             for (int i = 0; i < PrefabMappings.Length; i++)
             {
                 if (PrefabMappings[i].TemplateId == templateId && PrefabMappings[i].Prefab != null)

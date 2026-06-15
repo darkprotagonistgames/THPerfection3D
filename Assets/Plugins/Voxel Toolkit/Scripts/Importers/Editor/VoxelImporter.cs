@@ -21,7 +21,7 @@ namespace VoxelToolkit.Editor
         [Tooltip("The depth the transparent edge will be pushed outside during mesh generation. Useful for shadow issues.")]
         [SerializeField] private float transparentEdgeShift = 0.0f;
         [Tooltip("The scale of the object to be generated.")]
-        [SerializeField] private float scale = 0.1f;
+        [SerializeField] private float scale = 1.0f;
         [Tooltip("Index format of the mesh to use. Some platforms like some old mobile only support 16 bit indices.")]
         [SerializeField] private IndexFormat indexFormat = IndexFormat.UInt16;
         [Tooltip("Controls whether lightmap uv should be generated during import.")]

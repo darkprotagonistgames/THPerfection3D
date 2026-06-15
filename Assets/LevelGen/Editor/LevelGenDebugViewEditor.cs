@@ -72,6 +72,10 @@ namespace THPerfection.LevelGen.Editor
             }
 
             EditorGUILayout.Space(8f);
+            EditorGUILayout.LabelField("Catalog", EditorStyles.boldLabel);
+            EditorGUILayout.PropertyField(serializedObject.FindProperty("CatalogAsset"));
+
+            EditorGUILayout.Space(8f);
             EditorGUILayout.LabelField("Config", EditorStyles.boldLabel);
             EditorGUILayout.PropertyField(serializedObject.FindProperty("Config"), includeChildren: true);
 

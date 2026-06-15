@@ -5,6 +5,9 @@ namespace THPerfection.LevelGen
     [System.Serializable]
     public struct BuildingGenConfig
     {
+        /// <summary>World units per grid cell (one 1×1 room footprint). Beta default: 150×150.</summary>
+        public const float DefaultCellSize = 150f;
+
         public uint Seed;
         public int TargetRoomCount;
         public int MaxAttemptsPerDoorway;
@@ -22,7 +25,7 @@ namespace THPerfection.LevelGen
             MinOpenDoorwaysBeforeDeadEnd  = 2,
             MinPlacedRoomsBeforeDeadEnd   = 3,
             SeedOrigin             = int2.zero,
-            CellSize               = 4f,
+            CellSize               = DefaultCellSize,
             FloorY                 = 0f,
         };
     }

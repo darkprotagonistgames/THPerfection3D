@@ -246,7 +246,7 @@ Office_2x2 (root, local origin, facing -Z)
     └── SpawnPointSlot              (placeholder)
 ```
 
-Local **X = grid X**, **Z = grid Z**, one cell = `CellSize` world units (e.g. 4 m).
+Local **X = grid X**, **Z = grid Z**, one cell = `CellSize` world units (beta default **150**; configurable on `BuildingGenConfig`).
 
 ### Authoring components
 
