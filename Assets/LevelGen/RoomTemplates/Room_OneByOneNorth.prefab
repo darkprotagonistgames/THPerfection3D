@@ -131,7 +131,7 @@ MonoBehaviour:
     x: 0
     y: 0
   Side: 3
-  IsMainDoor: 1
+  IsMainDoor: 0
   OpenVisual: {fileID: 5982144534197016105}
   ClosedVisual: {fileID: 466470786152766727}
 --- !u!1 &344528799219064251
