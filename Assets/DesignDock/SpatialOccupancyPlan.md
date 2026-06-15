@@ -25,8 +25,8 @@ This plan assumes the following from [LevelGenPlan.md](LevelGenPlan.md) are ship
 
 | Prerequisite | Why |
 |--------------|-----|
-| `BuildingGenerationResult` bridged into ECS at run start | Room lookup needs runtime occupancy |
-| `BuildingLayoutBlob` (or equivalent) on a singleton | Burst-friendly `TryGetCell(floor, cell) → OccupiedCell` |
+| `BuildingRunState` (mutable) bridged into ECS | Authoritative growing layout: `RoomInstance` list + per-floor occupancy |
+| `BuildingLayoutBlob` read snapshot on a singleton | Burst-friendly `TryGetCell(floor, cell) → OccupiedCell`; **rebuilt** when run state changes |
 | `RoomSpawnSystem` + room prefabs with `CameraAnchorSlot` | Camera-on-room-change needs per-room anchors |
 | `CellSize` / `FloorY` from `BuildingGenConfig` on a singleton | World ↔ cell math must match generation |
 | `LocalTransform` on tracked entities after spawn | Position source for occupancy |
@@ -50,6 +50,46 @@ Reuse level-gen conventions — do not invent a second grid:
 | Room | `OccupiedCell.RoomInstanceId` from layout blob at `(floor, cell)`; `0` = outside building / unmapped |
 
 **Cell boundary:** use **floor** division on world XZ (entity is in the cell that contains its transform position). Document whether designers should use entity pivot at feet vs center; default to **transform position** and adjust with an optional `SpatialOccupancyOffset` later if needed.
+
+---
+
+## Run layout: mutable state vs read snapshot
+
+The run building **grows** across rounds and additive generation passes ([GameDesign.md](GameDesign.md) — no map wipes). Unity blob assets are **immutable after creation**, so the layout must not be stored only in a blob.
+
+Use a **two-layer model**:
+
+| Layer | Role | Mutability |
+|-------|------|------------|
+| **`BuildingRunState`** | Source of truth: `RoomInstance[]`, `BuildingOccupancy` / `FloorGrid`, doorway frontier | **Mutable** — generator stamps new rooms each pass |
+| **`BuildingLayoutBlob`** | Read-only snapshot for Burst jobs and occupancy lookup | **Immutable** — **recreated in full** whenever run state commits a layout change |
+
+**When the blob is recreated** (not patched in place):
+
+- Initial run / first generation pass completes
+- Each **additive** generation pass (new round budget, event wing, promoted `Open` doors)
+- Any system that mutates occupancy and commits new `RoomInstance` data
+
+**Rebuild pipeline** (single commit point, e.g. `BuildingLayoutCommitSystem`):
+
+1. Generator (or reload from persisted instances) writes into **`BuildingRunState`**.
+2. `RoomSpawnSystem` instantiates new room entities for added instances.
+3. **`BuildingLayoutBlobBuilder`** allocates a **new** blob from current run state, copies all stamped cells + door masks.
+4. Singleton swaps `BuildingLayoutBlobRef.Layout` → new reference; **`LayoutVersion`** increments.
+5. **Dispose** the previous `BlobAssetReference` (no leak across many rounds).
+6. Optional: broadcast `layoutChangedEvent` or set a one-frame tag so pathfinding / spatial systems invalidate caches.
+
+Readers (`SpatialOccupancyUpdateSystem`, pathfinding jobs) use only the **current** blob reference + version. They never write to the blob.
+
+```mermaid
+flowchart LR
+    Gen[Generator / additive pass] --> Run[BuildingRunState mutable]
+    Run --> Spawn[RoomSpawnSystem]
+    Run --> Build[BuildingLayoutBlobBuilder]
+    Build --> Snap[New BuildingLayoutBlob]
+    Snap --> Ref[BuildingLayoutBlobRef swap + LayoutVersion++]
+    Ref --> Read[Occupancy + pathfinding readers]
+```
 
 ---
 
@@ -136,19 +176,27 @@ public struct BuildingSpatialConfig : IComponentData
     public float MainFloorY;   // beta; extend with per-floor Y table later
 }
 
+/// <summary>Authoritative mutable run layout. Generator writes here; blob is derived.</summary>
+public struct BuildingRunState : IComponentData
+{
+    // Managed or native-backed: RoomInstance list, BuildingOccupancy, frontier.
+    // Not Burst-readable directly — use BuildingLayoutBlob for parallel lookup.
+}
+
 public struct BuildingLayoutBlobRef : IComponentData
 {
     public BlobAssetReference<BuildingLayoutBlob> Layout;
+    public uint LayoutVersion;   // incremented on every full blob recreate
 }
 ```
 
-`BuildingLayoutBlob` (burst-friendly, built when run layout is committed):
+`BuildingLayoutBlob` (immutable snapshot, **full rebuild** on each layout commit):
 
 - Flat or hash-backed cell map per floor: `(floor, int2) → OccupiedCell` (room id + `DoorMask`).
 - Optional: `RoomInstanceId → int2 origin` for room-center queries.
-- Optional: `RoomInstanceId → Entity` map maintained at spawn for anchor lookup.
+- Optional: `RoomInstanceId → Entity` map maintained at spawn for anchor lookup (separate from blob; updated when rooms spawn).
 
-Populate from `BuildingOccupancy` / `BuildingGenerationResult` when the building is generated or reloaded after additive passes.
+`BuildingLayoutBlobBuilder.Build(in BuildingRunState)` copies the **entire** current occupancy into a new blob. Cost is acceptable: additive passes are infrequent relative to per-frame simulation, and cell count stays bounded by room budget.
 
 ---
 
@@ -201,7 +249,7 @@ Not implemented today (`MoveToSystem` steers directly). This tracker **does not*
 
 Suggested follow-on doc/system: `PathfindingPlan.md` — cell BFS/A* on main floor, door-aware neighbors via `GridTransforms.Direction()` + `DoorMask`.
 
-Invalidate or requeue paths in a system `[UpdateAfter(typeof(SpatialOccupancyUpdateSystem))]` when `GridCellChanged` fires on the pathing agent or when layout blob updates (additive gen).
+Invalidate or requeue paths when `GridCellChanged` fires on the pathing agent, or when `BuildingLayoutBlobRef.LayoutVersion` changes (layout commit / additive gen).
 
 ### Camera on player room change
 
@@ -248,8 +296,8 @@ When basement/attic ship:
 
 | Phase | Scope | Deliverable |
 |-------|--------|-------------|
-| **A** | Layout bridge | `BuildingLayoutBlob`, `BuildingSpatialConfig` singleton populated at run start |
-| **B** | Core tracker | Components, `SpatialOccupancyUpdateSystem`, cleanup, unit tests for `WorldToCell` / blob lookup |
+| **A** | Layout bridge | `BuildingRunState`, `BuildingLayoutBlobBuilder`, commit system (recreate blob + version bump), `BuildingSpatialConfig` |
+| **B** | Core tracker | Components, `SpatialOccupancyUpdateSystem`, cleanup, unit tests for `WorldToCell` / blob lookup / rebuild |
 | **C** | Authoring | `TracksSpatialOccupancy` on character + spawner prefabs; spawn init |
 | **D** | Camera | `PlayerRoomCameraSystem` + room `CameraAnchor` resolution |
 | **E** | Pathfinding prep | Walkability builder from blob; document API for future A* / room graph |
@@ -269,8 +317,10 @@ Assets/scripts/Spatial/
   RoomChanged.cs
   TracksSpatialOccupancy.cs
   BuildingSpatialConfig.cs
+  BuildingRunState.cs               # mutable authoritative layout
   BuildingLayoutBlob.cs
-  BuildingLayoutBlobBuilder.cs      # from BuildingGenerationResult
+  BuildingLayoutBlobBuilder.cs      # full snapshot from BuildingRunState
+  BuildingLayoutCommitSystem.cs     # recreate blob on layout change, dispose old ref
   SpatialOccupancyUpdateSystem.cs
   SpatialOccupancyCleanupSystem.cs
   SpatialWorldGrid.cs               # WorldToCell, ResolveFloor static helpers
@@ -287,7 +337,8 @@ Assets/scripts/Spatial/Tests/
 | Test | Assert |
 |------|--------|
 | `WorldToCell` | Known world positions → expected `int2` at `CellSize` 4 |
-| Layout blob | Stamped room cells return correct `RoomInstanceId` |
+| Layout blob build | Stamped room cells return correct `RoomInstanceId` |
+| Layout blob rebuild | After additive pass, new blob includes old + new cells; version increments; old blob disposed |
 | Cell boundary | Position at `cell * size + epsilon` stays in cell until crossing |
 | Change tags | After simulated move across boundary, `GridCellChanged` enabled one frame then cleaned up |
 | Room transition | Move across door between rooms enables `RoomChanged` with correct ids |
@@ -305,6 +356,8 @@ Playmode: debug draw current cell under player; log on `RoomChanged`.
 - **Recompute room from float position in camera system** — read `RoomLocation` / `RoomChanged`.
 - **Track everything** — use `TracksSpatialOccupancy` opt-in; static room meshes do not need per-frame updates.
 - **Forget cleanup** — consumers will fire every frame if change tags stay enabled.
+- **Mutate the layout blob** — blobs are immutable; update `BuildingRunState`, then recreate the snapshot.
+- **Patch blob cells in place** — always full rebuild on commit; patch-in-place is not supported by `BlobAssetReference`.
 
 ---
 
@@ -315,6 +368,6 @@ Playmode: debug draw current cell under player; log on `RoomChanged`.
 | Entity outside building | `RoomInstanceId = 0`; room change fires when entering/leaving stamped cells |
 | Same room, different cell | `GridCellChanged` yes; `RoomChanged` no |
 | Teleport | Large jump updates both; both tags may enable same frame |
-| Additive level gen | Rebuild or patch `BuildingLayoutBlob`; optionally enable `GridCellChanged` on all tracked entities to force re-resolve |
+| Additive level gen | Commit updates `BuildingRunState` → **recreate** `BuildingLayoutBlob` → `LayoutVersion++`; invalidate path caches; optionally force spatial re-resolve on tracked entities |
 | Sub-cell movement | No cell signal until boundary crossed — correct for grid pathfinding |
 | Multiple entities per cell | Allowed; no exclusivity constraint on occupancy |
