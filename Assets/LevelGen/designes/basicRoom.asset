@@ -1,0 +1,66 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2ee150d2f93a97541b482d62f5535b96, type: 3}
+  m_Name: basicRoom
+  m_EditorClassIdentifier: THPerfection.LevelGen::THPerfection.LevelGen.Authoring.RoomTemplateDesign
+  TemplateId: routunda
+  PrefabName: routunda
+  AllowedFloors: 2
+  BaseWeight: 1
+  CellSize: 150
+  GridWidth: 8
+  GridHeight: 8
+  Cells:
+  - {x: 0, y: 0}
+  - {x: 1, y: 0}
+  - {x: 0, y: 1}
+  - {x: 1, y: 1}
+  Edges:
+  - Cell: {x: 0, y: 0}
+    Side: 2
+    Kind: 1
+    IsMainDoor: 1
+  - Cell: {x: 0, y: 0}
+    Side: 3
+    Kind: 0
+    IsMainDoor: 0
+  - Cell: {x: 1, y: 0}
+    Side: 1
+    Kind: 1
+    IsMainDoor: 0
+  - Cell: {x: 1, y: 0}
+    Side: 2
+    Kind: 0
+    IsMainDoor: 0
+  - Cell: {x: 0, y: 1}
+    Side: 0
+    Kind: 0
+    IsMainDoor: 0
+  - Cell: {x: 0, y: 1}
+    Side: 3
+    Kind: 1
+    IsMainDoor: 0
+  - Cell: {x: 1, y: 1}
+    Side: 0
+    Kind: 1
+    IsMainDoor: 0
+  - Cell: {x: 1, y: 1}
+    Side: 1
+    Kind: 0
+    IsMainDoor: 0
+  OutputFolder: Assets/LevelGen/RoomTemplates
+  InstantiatePlaceholderPrefabs: 1
+  AddToCatalog: 1
+  FloorPrefab: {fileID: -2253911629886400664, guid: cfbe74c27d2b24c4599a6f60b4daf7f0, type: 3}
+  WallPrefab: {fileID: -2253911629886400664, guid: 6c5cbadac8c4dbf44b7be8e133d1d48c, type: 3}
+  DoorOpenPrefab: {fileID: -2253911629886400664, guid: 7dba6da756445bd4f84d49f8a35f1e47, type: 3}
+  DoorClosedPrefab: {fileID: -2253911629886400664, guid: e5191b848c08baf468922fb1718e1f64, type: 3}
