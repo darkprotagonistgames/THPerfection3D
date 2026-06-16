@@ -1,0 +1,150 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2ee150d2f93a97541b482d62f5535b96, type: 3}
+  m_Name: TestRoom
+  m_EditorClassIdentifier: THPerfection.LevelGen::THPerfection.LevelGen.Authoring.RoomTemplateDesign
+  TemplateId: BIG_ROOMM_3_doors
+  PrefabName: BIG_ROOMM_3_doors
+  AllowedFloors: 2
+  BaseWeight: 1
+  CellSize: 150
+  GridWidth: 8
+  GridHeight: 8
+  Cells:
+  - {x: 3, y: 1}
+  - {x: 3, y: 2}
+  - {x: 4, y: 2}
+  - {x: 2, y: 2}
+  - {x: 1, y: 4}
+  - {x: 1, y: 3}
+  - {x: 1, y: 2}
+  - {x: 1, y: 1}
+  - {x: 1, y: 0}
+  - {x: 5, y: 0}
+  - {x: 5, y: 1}
+  - {x: 5, y: 2}
+  - {x: 5, y: 3}
+  - {x: 5, y: 4}
+  - {x: 4, y: 4}
+  - {x: 3, y: 4}
+  - {x: 2, y: 4}
+  - {x: 2, y: 3}
+  - {x: 3, y: 3}
+  - {x: 4, y: 3}
+  - {x: 2, y: 1}
+  - {x: 2, y: 0}
+  - {x: 3, y: 0}
+  - {x: 4, y: 0}
+  Edges:
+  - Cell: {x: 3, y: 1}
+    Side: 1
+    Kind: 1
+    IsMainDoor: 0
+  - Cell: {x: 4, y: 2}
+    Side: 2
+    Kind: 1
+    IsMainDoor: 0
+  - Cell: {x: 1, y: 4}
+    Side: 0
+    Kind: 0
+    IsMainDoor: 0
+  - Cell: {x: 1, y: 4}
+    Side: 3
+    Kind: 0
+    IsMainDoor: 0
+  - Cell: {x: 1, y: 3}
+    Side: 3
+    Kind: 0
+    IsMainDoor: 0
+  - Cell: {x: 1, y: 2}
+    Side: 3
+    Kind: 0
+    IsMainDoor: 0
+  - Cell: {x: 1, y: 1}
+    Side: 3
+    Kind: 1
+    IsMainDoor: 1
+  - Cell: {x: 1, y: 0}
+    Side: 2
+    Kind: 0
+    IsMainDoor: 0
+  - Cell: {x: 1, y: 0}
+    Side: 3
+    Kind: 0
+    IsMainDoor: 0
+  - Cell: {x: 5, y: 0}
+    Side: 1
+    Kind: 0
+    IsMainDoor: 0
+  - Cell: {x: 5, y: 0}
+    Side: 2
+    Kind: 0
+    IsMainDoor: 0
+  - Cell: {x: 5, y: 1}
+    Side: 1
+    Kind: 0
+    IsMainDoor: 0
+  - Cell: {x: 5, y: 1}
+    Side: 3
+    Kind: 1
+    IsMainDoor: 0
+  - Cell: {x: 5, y: 2}
+    Side: 1
+    Kind: 0
+    IsMainDoor: 0
+  - Cell: {x: 5, y: 3}
+    Side: 1
+    Kind: 0
+    IsMainDoor: 0
+  - Cell: {x: 5, y: 4}
+    Side: 0
+    Kind: 0
+    IsMainDoor: 0
+  - Cell: {x: 5, y: 4}
+    Side: 1
+    Kind: 1
+    IsMainDoor: 0
+  - Cell: {x: 4, y: 4}
+    Side: 0
+    Kind: 0
+    IsMainDoor: 0
+  - Cell: {x: 3, y: 4}
+    Side: 0
+    Kind: 1
+    IsMainDoor: 0
+  - Cell: {x: 2, y: 4}
+    Side: 0
+    Kind: 0
+    IsMainDoor: 0
+  - Cell: {x: 2, y: 0}
+    Side: 2
+    Kind: 1
+    IsMainDoor: 0
+  - Cell: {x: 3, y: 0}
+    Side: 2
+    Kind: 0
+    IsMainDoor: 0
+  - Cell: {x: 4, y: 0}
+    Side: 0
+    Kind: 1
+    IsMainDoor: 0
+  - Cell: {x: 4, y: 0}
+    Side: 2
+    Kind: 0
+    IsMainDoor: 0
+  OutputFolder: Assets/LevelGen/RoomPrefabs
+  InstantiatePlaceholderPrefabs: 1
+  AddToCatalog: 1
+  FloorPrefab: {fileID: 6400979134803148087, guid: fe7a63abfb5fd864d8f0108409f1b881, type: 3}
+  WallPrefab: {fileID: 2676805593006484602, guid: 7051c16fc8bb9784080e0183cb9c6fdc, type: 3}
+  DoorOpenPrefab: {fileID: 5778586911230861079, guid: 5b33b93640c7fa042a43f1547e724e91, type: 3}
+  DoorClosedPrefab: {fileID: 7510394124821481844, guid: 5e72028406d6f05498b9927ba5671f89, type: 3}
