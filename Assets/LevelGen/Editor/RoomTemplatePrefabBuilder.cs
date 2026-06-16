@@ -18,9 +18,10 @@ namespace THPerfection.LevelGen.Editor
     {
       ResolveDefaultPrefabs(design);
 
-      var root = new GameObject(design.PrefabName);
+      string roomId = ResolveRoomId(design);
+      var root = new GameObject(roomId);
       var authoring = root.AddComponent<RoomTemplateAuthoring>();
-      authoring.TemplateId = design.TemplateId;
+      authoring.TemplateId = roomId;
       authoring.AllowedFloors = design.AllowedFloors;
       authoring.BaseWeight = design.BaseWeight;
       authoring.CellSize = design.CellSize;
@@ -96,7 +97,7 @@ namespace THPerfection.LevelGen.Editor
       try
       {
         Directory.CreateDirectory(design.OutputFolder);
-        prefabPath = Path.Combine(design.OutputFolder, $"{design.PrefabName}.prefab").Replace('\\', '/');
+        prefabPath = Path.Combine(design.OutputFolder, $"{ResolveRoomId(design)}.prefab").Replace('\\', '/');
         GameObject prefab = PrefabUtility.SaveAsPrefabAsset(root, prefabPath);
 
         if (design.AddToCatalog)
@@ -119,8 +120,9 @@ namespace THPerfection.LevelGen.Editor
         return;
       }
 
-      design.TemplateId = authoring.TemplateId;
-      design.PrefabName = prefab.name;
+      design.TemplateId = !string.IsNullOrWhiteSpace(authoring.TemplateId)
+        ? authoring.TemplateId.Trim()
+        : prefab.name;
       design.AllowedFloors = authoring.AllowedFloors;
       design.BaseWeight = authoring.BaseWeight;
       design.CellSize = authoring.CellSize;
@@ -155,6 +157,9 @@ namespace THPerfection.LevelGen.Editor
 
       EditorUtility.SetDirty(design);
     }
+
+    static string ResolveRoomId(RoomTemplateDesign design) =>
+      string.IsNullOrWhiteSpace(design.TemplateId) ? "new_room" : design.TemplateId.Trim();
 
     static void ResolveDefaultPrefabs(RoomTemplateDesign design)
     {

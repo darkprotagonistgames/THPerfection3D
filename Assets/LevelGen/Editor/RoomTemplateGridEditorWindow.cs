@@ -96,8 +96,9 @@ namespace THPerfection.LevelGen.Editor
     void DrawSettings()
     {
       EditorGUILayout.LabelField("Template", EditorStyles.boldLabel);
-      _design.TemplateId = EditorGUILayout.TextField("Template Id", _design.TemplateId);
-      _design.PrefabName = EditorGUILayout.TextField("Prefab Name", _design.PrefabName);
+      _design.TemplateId = EditorGUILayout.TextField(
+        new GUIContent("Room Id", "Used for catalog template id and generated prefab filename."),
+        _design.TemplateId);
       _design.CellSize = EditorGUILayout.FloatField("Cell Size", _design.CellSize);
       _design.BaseWeight = EditorGUILayout.FloatField("Base Weight", _design.BaseWeight);
       _design.AllowedFloors = (FloorMask)EditorGUILayout.EnumFlagsField("Allowed Floors", _design.AllowedFloors);
@@ -318,7 +319,6 @@ namespace THPerfection.LevelGen.Editor
       EnsureDesign();
       Undo.RecordObject(_design, "Apply 1x1 North Preset");
       _design.TemplateId = "one_by_one_north";
-      _design.PrefabName = "Room_OneByOneNorth";
       _design.Cells.Clear();
       _design.SetCellOccupied(new Vector2Int(0, 0), true);
       _design.SetEdgeKind(new Vector2Int(0, 0), DoorSide.North, RoomEdgeKind.Door);
@@ -331,7 +331,6 @@ namespace THPerfection.LevelGen.Editor
       EnsureDesign();
       Undo.RecordObject(_design, "Apply 2x1 Hall Preset");
       _design.TemplateId = "two_by_one_hall";
-      _design.PrefabName = "Room_TwoByOneHall";
       _design.Cells.Clear();
       _design.SetCellOccupied(new Vector2Int(0, 0), true);
       _design.SetCellOccupied(new Vector2Int(1, 0), true);
