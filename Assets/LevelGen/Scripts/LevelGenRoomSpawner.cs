@@ -72,11 +72,31 @@ namespace THPerfection.LevelGen
             if (result?.Instances == null || result.Instances.Count == 0)
                 return;
 
+            SpawnInstances(result.Instances, config, catalog);
+        }
+
+        public void SpawnAdditional(
+            IReadOnlyList<RoomInstance> instances,
+            in BuildingGenConfig config,
+            RoomCatalog catalog)
+        {
+            if (instances == null || instances.Count == 0)
+                return;
+
+            _activeCatalog = catalog;
+            SpawnInstances(instances, config, catalog);
+        }
+
+        void SpawnInstances(
+            IReadOnlyList<RoomInstance> instances,
+            in BuildingGenConfig config,
+            RoomCatalog catalog)
+        {
             float cellSize = Mathf.Max(0.01f, config.CellSize);
             float floorY = config.FloorY;
             float doorY = floorY + 0.5f;
 
-            foreach (RoomInstance instance in result.Instances)
+            foreach (RoomInstance instance in instances)
             {
                 if (!catalog.TryGetTemplate(instance.TemplateId, out RoomTemplateDefinition template))
                     continue;

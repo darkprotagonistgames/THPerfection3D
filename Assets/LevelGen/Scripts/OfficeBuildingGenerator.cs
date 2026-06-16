@@ -9,27 +9,68 @@ namespace THPerfection.LevelGen
             in BuildingGenConfig config,
             RoomCatalog catalog)
         {
-            var occupancy = new BuildingOccupancy();
-            FloorGrid grid = occupancy.GetOrCreateFloor(FloorId.Main);
-            var frontier = new DoorwayFrontier();
-            var connected = new HashSet<DoorEdgeKey>();
-            var instances = new List<RoomInstance>();
+            var state = new BuildingRunState(config);
+            GenerateMainFloorInto(state, catalog);
+            return state.ToResult(CollectOpenFrontier(state, catalog));
+        }
+
+        public static void GenerateMainFloorInto(BuildingRunState state, RoomCatalog catalog)
+        {
+            state.Clear();
+            RunInitialPass(state, catalog);
+        }
+
+        public static ExpansionResult ExpandMainFloor(
+            BuildingRunState state,
+            RoomCatalog catalog,
+            int additionalRoomCount,
+            uint expansionSeed = 0)
+        {
+            if (state == null)
+                throw new System.ArgumentNullException(nameof(state));
+
+            if (additionalRoomCount <= 0 || state.Instances.Count == 0)
+            {
+                state.RestoreFrontier(catalog, out DoorwayFrontier idleFrontier, out _);
+                return ExpansionResult.NoChange(state, idleFrontier.OpenSlots);
+            }
+
+            int roomsBefore = state.Instances.Count;
+            uint seed = ResolvePassSeed(state, expansionSeed);
+            var rng = new Random(seed == 0 ? 1u : seed);
+
+            state.RestoreFrontier(catalog, out DoorwayFrontier frontier, out HashSet<DoorEdgeKey> connected);
+            FloorGrid grid = state.Occupancy.GetOrCreateFloor(state.Floor);
             var attemptCounts = new Dictionary<DoorEdgeKey, int>();
-            var rng = new Random(config.Seed == 0 ? 1u : config.Seed);
+            int targetTotal = roomsBefore + additionalRoomCount;
+            var addedInstances = new List<RoomInstance>();
 
-            if (!TryPlaceSeed(in config, catalog, grid, frontier, connected, instances, ref rng))
-                return BuildResult(occupancy, frontier);
-
-            while (instances.Count < config.TargetRoomCount && frontier.OpenCount > 0)
+            while (state.Instances.Count < targetTotal && frontier.OpenCount > 0)
             {
                 int clearOpenDoorways = CountClearOpenDoorways(grid, frontier);
 
                 if (!TryPickDoorway(
-                        in config, frontier, grid, catalog, FloorId.Main, instances.Count, clearOpenDoorways, ref rng, out DoorwaySlot doorway))
+                        state.Config,
+                        frontier,
+                        grid,
+                        catalog,
+                        state.Floor,
+                        state.Instances.Count,
+                        clearOpenDoorways,
+                        targetTotal,
+                        ref rng,
+                        out DoorwaySlot doorway))
                     break;
 
                 var candidates = CollectCandidates(
-                    FloorId.Main, grid, catalog, in doorway, in config, instances.Count, clearOpenDoorways);
+                    state.Floor,
+                    grid,
+                    catalog,
+                    in doorway,
+                    state.Config,
+                    state.Instances.Count,
+                    clearOpenDoorways,
+                    targetTotal);
 
                 if (candidates.Count == 0)
                 {
@@ -38,7 +79,88 @@ namespace THPerfection.LevelGen
                     attempts++;
                     attemptCounts[key] = attempts;
 
-                    if (attempts >= config.MaxAttemptsPerDoorway)
+                    if (attempts >= state.Config.MaxAttemptsPerDoorway)
+                        frontier.MarkDead(doorway);
+
+                    continue;
+                }
+
+                if (!WeightedSelection.TryPick(ref rng, candidates, out PlacementCandidate picked))
+                    continue;
+
+                int beforeCount = state.Instances.Count;
+                CommitRoom(
+                    grid,
+                    frontier,
+                    connected,
+                    state.Instances,
+                    state.Floor,
+                    in picked,
+                    doorway);
+
+                if (state.Instances.Count > beforeCount)
+                    addedInstances.Add(state.Instances[state.Instances.Count - 1]);
+            }
+
+            ClassifyDoorStates(grid, frontier, connected, catalog, state.Instances, state.Floor);
+            state.NotePassComplete(seed, frontier);
+
+            return new ExpansionResult(
+                addedInstances,
+                state.ToResult(new List<DoorwaySlot>(frontier.OpenSlots)),
+                roomsBefore);
+        }
+
+        static void RunInitialPass(BuildingRunState state, RoomCatalog catalog)
+        {
+            uint seed = ResolvePassSeed(state, expansionSeed: 0);
+            var rng = new Random(seed == 0 ? 1u : seed);
+            FloorGrid grid = state.Occupancy.GetOrCreateFloor(state.Floor);
+            var frontier = new DoorwayFrontier();
+            var connected = new HashSet<DoorEdgeKey>();
+            var attemptCounts = new Dictionary<DoorEdgeKey, int>();
+
+            if (!TryPlaceSeed(state.Config, catalog, grid, frontier, connected, state.Instances, ref rng))
+            {
+                state.NotePassComplete(seed, frontier);
+                return;
+            }
+
+            while (state.Instances.Count < state.Config.TargetRoomCount && frontier.OpenCount > 0)
+            {
+                int clearOpenDoorways = CountClearOpenDoorways(grid, frontier);
+
+                if (!TryPickDoorway(
+                        state.Config,
+                        frontier,
+                        grid,
+                        catalog,
+                        state.Floor,
+                        state.Instances.Count,
+                        clearOpenDoorways,
+                        state.Config.TargetRoomCount,
+                        ref rng,
+                        out DoorwaySlot doorway))
+                    break;
+
+                var candidates = CollectCandidates(
+                    state.Floor,
+                    grid,
+                    catalog,
+                    in doorway,
+                    state.Config,
+                    state.Instances.Count,
+                    clearOpenDoorways,
+                    state.Config.TargetRoomCount);
+
+                if (candidates.Count == 0)
+                {
+                    var key = new DoorEdgeKey(doorway);
+                    attemptCounts.TryGetValue(key, out int attempts);
+                    attempts++;
+                    attemptCounts[key] = attempts;
+
+                    if (attempts >= state.Config.MaxAttemptsPerDoorway)
                         frontier.MarkDead(doorway);
 
                     continue;
@@ -51,14 +173,31 @@ namespace THPerfection.LevelGen
                     grid,
                     frontier,
                     connected,
-                    instances,
-                    FloorId.Main,
+                    state.Instances,
+                    state.Floor,
                     in picked,
                     doorway);
             }
 
-            ClassifyDoorStates(grid, frontier, connected, catalog, instances, FloorId.Main);
-            return BuildResult(occupancy, frontier, instances);
+            ClassifyDoorStates(grid, frontier, connected, catalog, state.Instances, state.Floor);
+            state.NotePassComplete(seed, frontier);
+        }
+
+        static IReadOnlyList<DoorwaySlot> CollectOpenFrontier(BuildingRunState state, RoomCatalog catalog)
+        {
+            state.RestoreFrontier(catalog, out DoorwayFrontier frontier, out _);
+            return new List<DoorwaySlot>(frontier.OpenSlots);
+        }
+
+        static uint ResolvePassSeed(BuildingRunState state, uint expansionSeed)
+        {
+            if (expansionSeed != 0)
+                return expansionSeed;
+
+            if (state.Config.Seed != 0)
+                return state.Config.Seed + (uint)state.PassCount;
+
+            return (uint)(state.PassCount + 1);
         }
 
         static bool TryPlaceSeed(
@@ -109,6 +248,7 @@ namespace THPerfection.LevelGen
             FloorId floor,
             int placedRoomCount,
             int clearOpenDoorways,
+            int targetRoomCount,
             ref Random rng,
             out DoorwaySlot doorway)
         {
@@ -121,7 +261,7 @@ namespace THPerfection.LevelGen
                 foreach (DoorwaySlot slot in frontier.OpenSlots)
                 {
                     if (HasExpansionCandidate(
-                            floor, grid, catalog, in config, placedRoomCount, clearOpenDoorways, in slot))
+                            floor, grid, catalog, in config, placedRoomCount, clearOpenDoorways, targetRoomCount, in slot))
                         viable.Add(slot);
                 }
 
@@ -145,16 +285,17 @@ namespace THPerfection.LevelGen
             in BuildingGenConfig config,
             int placedRoomCount,
             int openDoorwayCount,
+            int targetRoomCount,
             in DoorwaySlot doorway)
         {
             foreach (PlacementCandidate candidate in CollectCandidates(
-                         floor, grid, catalog, in doorway, in config, placedRoomCount, openDoorwayCount))
+                         floor, grid, catalog, in doorway, in config, placedRoomCount, openDoorwayCount, targetRoomCount))
             {
                 if (candidate.Weight <= 0f)
                     continue;
 
                 var ctx = BuildContext(
-                    floor, grid, in doorway, in config, placedRoomCount, openDoorwayCount);
+                    floor, grid, in doorway, in config, placedRoomCount, openDoorwayCount, targetRoomCount);
                 if (!ctx.RequiresExpansionDoor)
                     return true;
 
@@ -173,11 +314,12 @@ namespace THPerfection.LevelGen
             in DoorwaySlot doorway,
             in BuildingGenConfig config,
             int placedRoomCount,
-            int openDoorwayCount)
+            int openDoorwayCount,
+            int targetRoomCount)
         {
             var candidates = new List<PlacementCandidate>();
             var ctx = BuildContext(
-                floor, grid, in doorway, in config, placedRoomCount, openDoorwayCount);
+                floor, grid, in doorway, in config, placedRoomCount, openDoorwayCount, targetRoomCount);
 
             foreach (RoomCatalogEntry entry in catalog.ForFloor(floor))
             {
@@ -210,14 +352,15 @@ namespace THPerfection.LevelGen
             in DoorwaySlot doorway,
             in BuildingGenConfig config,
             int placedRoomCount,
-            int openDoorwayCount) =>
+            int openDoorwayCount,
+            int targetRoomCount) =>
             new(
                 floor,
                 grid,
                 doorway,
                 openDoorwayCount: openDoorwayCount,
                 placedRoomCount: placedRoomCount,
-                targetRoomCount: config.TargetRoomCount,
+                targetRoomCount: targetRoomCount,
                 minOpenDoorwaysBeforeDeadEnd: config.MinOpenDoorwaysBeforeDeadEnd,
                 minPlacedRoomsBeforeDeadEnd: config.MinPlacedRoomsBeforeDeadEnd);
 
@@ -230,7 +373,7 @@ namespace THPerfection.LevelGen
             in PlacementCandidate candidate,
             DoorwaySlot? targetDoorway)
         {
-            int id = instances.Count + 1;
+            int id = NextInstanceId(instances);
             var instance = new RoomInstance(
                 id, candidate.Template, floor, candidate.Origin, candidate.Rotation);
 
@@ -251,9 +394,20 @@ namespace THPerfection.LevelGen
             EnqueueOpenDoorways(grid, frontier, floor, id, candidate, targetDoorway);
         }
 
+        static int NextInstanceId(List<RoomInstance> instances)
+        {
+            int maxId = 0;
+            for (int i = 0; i < instances.Count; i++)
+            {
+                if (instances[i].Id > maxId)
+                    maxId = instances[i].Id;
+            }
+
+            return maxId + 1;
+        }
+
         static int CountClearOpenDoorways(FloorGrid grid, DoorwayFrontier frontier)
         {
-            // Only these count toward MinOpenDoorwaysBeforeDeadEnd; blocked-ray doors stay on the frontier.
             int count = 0;
 
             foreach (DoorwaySlot slot in frontier.OpenSlots)
@@ -320,10 +474,13 @@ namespace THPerfection.LevelGen
                              template, instance.Origin, instance.Rotation))
                 {
                     var key = new DoorEdgeKey(socket, floor);
+                    instance.TryGetDoorState(key, out CellDoorState previous);
                     CellDoorState state;
 
                     if (connected.Contains(key))
                         state = CellDoorState.Connected;
+                    else if (previous == CellDoorState.Closed)
+                        state = CellDoorState.Closed;
                     else if (RoomPlacementRules.FacesAdjacentWall(grid, socket.Cell, socket.Side))
                         state = CellDoorState.Closed;
                     else if (frontier.IsDead(key))
@@ -347,18 +504,6 @@ namespace THPerfection.LevelGen
             }
 
             return default;
-        }
-
-        static BuildingGenerationResult BuildResult(
-            BuildingOccupancy occupancy,
-            DoorwayFrontier frontier,
-            List<RoomInstance> instances = null)
-        {
-            return new BuildingGenerationResult(
-                occupancy,
-                FloorId.Main,
-                instances ?? new List<RoomInstance>(),
-                new List<DoorwaySlot>(frontier.OpenSlots));
         }
     }
 }
