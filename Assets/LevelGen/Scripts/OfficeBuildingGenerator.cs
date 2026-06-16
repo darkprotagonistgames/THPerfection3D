@@ -39,7 +39,8 @@ namespace THPerfection.LevelGen
             uint seed = ResolvePassSeed(state, expansionSeed);
             var rng = new Random(seed == 0 ? 1u : seed);
 
-            state.RestoreFrontier(catalog, out DoorwayFrontier frontier, out HashSet<DoorEdgeKey> connected);
+            state.ClearDeadDoorwaysForExpansion();
+            state.RestoreExpansionFrontier(catalog, out DoorwayFrontier frontier, out HashSet<DoorEdgeKey> connected);
             FloorGrid grid = state.Occupancy.GetOrCreateFloor(state.Floor);
             var attemptCounts = new Dictionary<DoorEdgeKey, int>();
             int targetTotal = roomsBefore + additionalRoomCount;
@@ -474,13 +475,10 @@ namespace THPerfection.LevelGen
                              template, instance.Origin, instance.Rotation))
                 {
                     var key = new DoorEdgeKey(socket, floor);
-                    instance.TryGetDoorState(key, out CellDoorState previous);
                     CellDoorState state;
 
                     if (connected.Contains(key))
                         state = CellDoorState.Connected;
-                    else if (previous == CellDoorState.Closed)
-                        state = CellDoorState.Closed;
                     else if (RoomPlacementRules.FacesAdjacentWall(grid, socket.Cell, socket.Side))
                         state = CellDoorState.Closed;
                     else if (frontier.IsDead(key))

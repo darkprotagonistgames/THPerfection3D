@@ -105,43 +105,94 @@ namespace THPerfection.LevelGen.Tests
         }
 
         [Test]
-        public void ExpandMainFloor_keepsClosedDoorsClosed()
+        public void ExpandMainFloor_keepsWallAdjacentDoorsClosed()
         {
             var catalog = TestCatalog();
             var state = new BuildingRunState(Config(roomCount: 4, seed: 19));
             OfficeBuildingGenerator.GenerateMainFloorInto(state, catalog);
+            Assert.IsTrue(state.Occupancy.TryGetFloor(FloorId.Main, out FloorGrid grid));
 
-            var closedBefore = new HashSet<DoorEdgeKey>();
+            var wallClosedBefore = new HashSet<DoorEdgeKey>();
             foreach (RoomInstance instance in state.Instances)
             {
                 foreach (KeyValuePair<DoorEdgeKey, CellDoorState> entry in instance.DoorStates)
                 {
-                    if (entry.Value == CellDoorState.Closed)
-                        closedBefore.Add(entry.Key);
+                    if (entry.Value != CellDoorState.Closed)
+                        continue;
+
+                    if (RoomPlacementRules.FacesAdjacentWall(grid, entry.Key.Cell, entry.Key.Side))
+                        wallClosedBefore.Add(entry.Key);
                 }
             }
 
-            Assume.That(closedBefore.Count, Is.GreaterThan(0), "Need closed doors in the seed layout to validate sticky closure.");
+            Assume.That(
+                wallClosedBefore.Count,
+                Is.GreaterThan(0),
+                "Need wall-contact closed doors in the seed layout to validate sticky wall closure.");
 
             OfficeBuildingGenerator.ExpandMainFloor(
                 state, catalog, additionalRoomCount: 2, expansionSeed: 44);
 
-            foreach (DoorEdgeKey key in closedBefore)
+            foreach (DoorEdgeKey key in wallClosedBefore)
             {
                 foreach (RoomInstance instance in state.Instances)
                 {
                     if (!instance.TryGetDoorState(key, out CellDoorState stateAfter))
                         continue;
 
-                    if (stateAfter == CellDoorState.Connected)
-                        continue;
-
                     Assert.AreEqual(
                         CellDoorState.Closed,
                         stateAfter,
-                        $"Closed door {key.Floor} {key.Cell} {key.Side} reopened without connecting.");
+                        $"Wall-adjacent door {key.Floor} {key.Cell} {key.Side} reopened.");
                 }
             }
+        }
+
+        [Test]
+        public void RestoreExpansionFrontier_retriesNonWallExteriorDoors()
+        {
+            var catalog = TestCatalog();
+            var state = new BuildingRunState(Config(roomCount: 4, seed: 19));
+            OfficeBuildingGenerator.GenerateMainFloorInto(state, catalog);
+            Assert.IsTrue(state.Occupancy.TryGetFloor(FloorId.Main, out FloorGrid grid));
+
+            bool foundRetryableDoor = false;
+            foreach (RoomInstance instance in state.Instances)
+            {
+                foreach (KeyValuePair<DoorEdgeKey, CellDoorState> entry in instance.DoorStates)
+                {
+                    if (entry.Value != CellDoorState.Closed)
+                        continue;
+
+                    if (RoomPlacementRules.FacesAdjacentWall(grid, entry.Key.Cell, entry.Key.Side))
+                        continue;
+
+                    if (!IsExpandableExteriorDoor(grid, entry.Key))
+                        continue;
+
+                    foundRetryableDoor = true;
+                    break;
+                }
+
+                if (foundRetryableDoor)
+                    break;
+            }
+
+            Assume.That(
+                foundRetryableDoor,
+                Is.True,
+                "Need a non-wall exterior closed door to verify expansion frontier retry.");
+
+            state.ClearDeadDoorwaysForExpansion();
+            state.RestoreExpansionFrontier(catalog, out DoorwayFrontier frontier, out _);
+
+            Assert.Greater(frontier.OpenCount, 0, "Expansion frontier should include retryable exterior doors.");
+        }
+
+        static bool IsExpandableExteriorDoor(FloorGrid grid, in DoorEdgeKey key)
+        {
+            int2 neighbor = key.Cell + GridTransforms.Direction(key.Side);
+            return !grid.IsOccupied(neighbor);
         }
 
         [Test]

@@ -1,10 +1,13 @@
 using System.Collections.Generic;
+using Unity.Mathematics;
 
 namespace THPerfection.LevelGen
 {
     /// <summary>
     /// Mutable authoritative layout for a run: occupancy, room instances, and doorway history.
     /// Generator passes read and update this instead of rebuilding from scratch.
+    /// Only wall-contact doors stay permanently closed; other closed edges can re-enter
+    /// the frontier on later passes when the room pool or world state changes.
     /// </summary>
     public sealed class BuildingRunState
     {
@@ -51,6 +54,11 @@ namespace THPerfection.LevelGen
             frontier.CopyDeadTo(_deadDoorways);
         }
 
+        public void ClearDeadDoorwaysForExpansion() => _deadDoorways.Clear();
+
+        /// <summary>
+        /// Snapshot frontier from classified Open edges (e.g. after a pass completes).
+        /// </summary>
         public void RestoreFrontier(
             RoomCatalog catalog,
             out DoorwayFrontier frontier,
@@ -75,12 +83,57 @@ namespace THPerfection.LevelGen
                             break;
 
                         case CellDoorState.Open:
-                            if (IsValidOpenDoorway(grid, key))
+                            if (IsExpandableDoorway(grid, key))
                             {
                                 frontier.Enqueue(new DoorwaySlot(
                                     key.Floor, key.Cell, key.Side, instance.Id));
                             }
                             break;
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Rebuilds the expansion frontier from layout geometry. Clears pass-local dead
+        /// doorway history so a changed room pool (weights, events) can retry edges that
+        /// were previously closed for placement failure or budget — only wall contacts
+        /// stay off the frontier.
+        /// </summary>
+        public void RestoreExpansionFrontier(
+            RoomCatalog catalog,
+            out DoorwayFrontier frontier,
+            out HashSet<DoorEdgeKey> connected)
+        {
+            frontier  = new DoorwayFrontier();
+            connected = new HashSet<DoorEdgeKey>();
+
+            if (!Occupancy.TryGetFloor(Floor, out FloorGrid grid))
+                return;
+
+            foreach (RoomInstance instance in Instances)
+            {
+                if (!catalog.TryGetTemplate(instance.TemplateId, out RoomTemplateDefinition template))
+                    continue;
+
+                foreach (DoorSocket socket in RoomPlacementMath.GetWorldDoorSockets(
+                             template, instance.Origin, instance.Rotation))
+                {
+                    var key = new DoorEdgeKey(socket, Floor);
+
+                    if (IsMatedDoor(grid, socket))
+                    {
+                        connected.Add(key);
+                        continue;
+                    }
+
+                    if (RoomPlacementRules.FacesAdjacentWall(grid, socket.Cell, socket.Side))
+                        continue;
+
+                    if (IsExpandableDoorway(grid, key))
+                    {
+                        frontier.Enqueue(new DoorwaySlot(
+                            Floor, socket.Cell, socket.Side, instance.Id));
                     }
                 }
             }
@@ -107,10 +160,22 @@ namespace THPerfection.LevelGen
         public BuildingGenerationResult ToResult(IReadOnlyList<DoorwaySlot> openFrontier) =>
             new(Occupancy, Floor, new List<RoomInstance>(Instances), openFrontier);
 
-        static bool IsValidOpenDoorway(FloorGrid grid, in DoorEdgeKey key)
+        static bool IsExpandableDoorway(FloorGrid grid, in DoorEdgeKey key)
         {
             int2 neighbor = key.Cell + GridTransforms.Direction(key.Side);
             return !grid.IsOccupied(neighbor);
+        }
+
+        static bool IsMatedDoor(FloorGrid grid, in DoorSocket socket)
+        {
+            int2 neighbor = socket.Cell + GridTransforms.Direction(socket.Side);
+            if (!grid.IsOccupied(neighbor))
+                return false;
+
+            if (!grid.TryGet(neighbor, out OccupiedCell occupied))
+                return false;
+
+            return GridTransforms.HasDoor(occupied.Doors, GridTransforms.Opposite(socket.Side));
         }
     }
 }
