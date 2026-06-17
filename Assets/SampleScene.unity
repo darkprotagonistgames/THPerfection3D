@@ -509,7 +509,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: THPerfection.LevelGen::THPerfection.LevelGen.LevelGenDebugView
   CatalogAsset: {fileID: 11400000, guid: 9929ddcc5443e6c4d9c51961dbe50358, type: 2}
   Config:
-    Seed: 2109801989
+    Seed: 585611709
     TargetRoomCount: 200
     MaxAttemptsPerDoorway: 8
     MinOpenDoorwaysBeforeDeadEnd: 2
@@ -520,14 +520,15 @@ MonoBehaviour:
     CellSize: 150
     FloorY: 0
   RandomizeSeedOnGenerate: 1
-  Seed: 2109801989
+  Seed: 585611709
+  AdditionalRoomsOnContinue: 500
   SpawnVisualsOnGenerate: 1
   RoomFillColor: {r: 0.2, g: 0.45, b: 0.85, a: 0.25}
   OpenDoorColor: {r: 1, g: 0.85, b: 0.1, a: 1}
   ConnectedDoorColor: {r: 0.2, g: 0.9, b: 0.35, a: 1}
   ClosedDoorColor: {r: 0.85, g: 0.25, b: 0.2, a: 1}
-  _roomCount: 200
-  _openFrontierCount: 230
+  _roomCount: 1356
+  _openFrontierCount: 1128
 --- !u!4 &1253211529
 Transform:
   m_ObjectHideFlags: 0

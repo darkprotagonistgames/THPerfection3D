@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Unity.Mathematics;
 using UnityEngine;
 
@@ -19,6 +20,10 @@ namespace THPerfection.LevelGen
         [Tooltip("Used when Randomize Seed On Generate is disabled. Reusable for reproducible layouts.")]
         public uint Seed = 1;
 
+        [Header("Expansion")]
+        [Min(1)]
+        public int AdditionalRoomsOnContinue = 4;
+
         [Header("Visual Spawn")]
         public bool SpawnVisualsOnGenerate = true;
 
@@ -33,10 +38,12 @@ namespace THPerfection.LevelGen
         [SerializeField] int _openFrontierCount;
 
         BuildingGenerationResult _result;
+        BuildingRunState _runState;
         LevelGenRoomSpawner _roomSpawner;
         RoomCatalog _lastCatalog;
 
         public BuildingGenerationResult Result => _result;
+        public BuildingRunState RunState => _runState;
         public RoomCatalog LastCatalog => _lastCatalog;
 
         void Reset()
@@ -76,13 +83,56 @@ namespace THPerfection.LevelGen
 
             Config.Seed = Seed;
             _lastCatalog = ResolveCatalog();
-            _result = OfficeBuildingGenerator.GenerateMainFloor(Config, _lastCatalog);
+            _runState = new BuildingRunState(Config);
+            OfficeBuildingGenerator.GenerateMainFloorInto(_runState, _lastCatalog);
+            _result = _runState.ToResult(CollectOpenFrontier());
             _roomCount = _result.Instances.Count;
             _openFrontierCount = _result.OpenFrontier.Count;
             Debug.Log($"[LevelGen] Seed {Seed}: {_roomCount} rooms, {_openFrontierCount} open doorways.");
 
             if (SpawnVisualsOnGenerate)
                 SpawnVisuals(_lastCatalog);
+        }
+
+        [ContextMenu("Continue Expansion")]
+        public void ContinueExpansion()
+        {
+            if (_runState == null || _runState.Instances.Count == 0)
+            {
+                Debug.LogWarning("[LevelGen] Generate a floor before continuing expansion.");
+                return;
+            }
+
+            _lastCatalog ??= ResolveCatalog();
+            ExpansionResult expansion = OfficeBuildingGenerator.ExpandMainFloor(
+                _runState,
+                _lastCatalog,
+                AdditionalRoomsOnContinue,
+                expansionSeed: Seed);
+
+            _result = expansion.Snapshot;
+            _roomCount = _result.Instances.Count;
+            _openFrontierCount = _result.OpenFrontier.Count;
+            Debug.Log(
+                $"[LevelGen] Continued expansion (seed {Seed}): +{expansion.AddedInstances.Count} rooms "
+                + $"({expansion.RoomsBefore} → {expansion.RoomsAfter}), {_openFrontierCount} open doorways.");
+
+            if (SpawnVisualsOnGenerate)
+            {
+                if (expansion.AddedInstances.Count > 0)
+                    RoomSpawner.SpawnAdditional(expansion.AddedInstances, Config, _lastCatalog);
+                else
+                    Debug.Log("[LevelGen] No new rooms were placed this pass.");
+            }
+        }
+
+        IReadOnlyList<DoorwaySlot> CollectOpenFrontier()
+        {
+            if (_runState == null)
+                return System.Array.Empty<DoorwaySlot>();
+
+            _runState.RestoreFrontier(_lastCatalog ?? ResolveCatalog(), out DoorwayFrontier frontier, out _);
+            return new List<DoorwaySlot>(frontier.OpenSlots);
         }
 
         public RoomCatalog ResolveCatalog() =>

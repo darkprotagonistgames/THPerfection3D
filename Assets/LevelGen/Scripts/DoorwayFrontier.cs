@@ -62,6 +62,18 @@ namespace THPerfection.LevelGen
 
         public bool IsDead(in DoorEdgeKey key) => _dead.Contains(key);
 
+        public void CopyDeadTo(HashSet<DoorEdgeKey> target)
+        {
+            foreach (DoorEdgeKey key in _dead)
+                target.Add(key);
+        }
+
+        public void RestoreDead(IEnumerable<DoorEdgeKey> dead)
+        {
+            foreach (DoorEdgeKey key in dead)
+                _dead.Add(key);
+        }
+
         static bool Matches(in DoorwaySlot a, in DoorwaySlot b) =>
             a.Floor == b.Floor
             && a.Cell.Equals(b.Cell)

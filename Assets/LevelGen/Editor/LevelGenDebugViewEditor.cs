@@ -38,7 +38,20 @@ namespace THPerfection.LevelGen.Editor
                 EditorUtility.SetDirty(view);
                 SceneView.RepaintAll();
             }
+
+            using (new EditorGUI.DisabledScope(view.RunState == null || view.RunState.Instances.Count == 0))
+            {
+                if (GUILayout.Button("Continue Expansion"))
+                {
+                    Undo.RecordObject(view, "Continue Level Gen Expansion");
+                    view.ContinueExpansion();
+                    EditorUtility.SetDirty(view);
+                    SceneView.RepaintAll();
+                }
+            }
             EditorGUILayout.EndHorizontal();
+
+            EditorGUILayout.PropertyField(serializedObject.FindProperty("AdditionalRoomsOnContinue"));
 
             EditorGUILayout.BeginHorizontal();
             if (GUILayout.Button("Spawn Visuals"))
@@ -92,6 +105,7 @@ namespace THPerfection.LevelGen.Editor
             {
                 EditorGUILayout.IntField("Room Count", view.Result?.Instances.Count ?? 0);
                 EditorGUILayout.IntField("Open Frontier", view.Result?.OpenFrontier.Count ?? 0);
+                EditorGUILayout.IntField("Pass Count", view.RunState?.PassCount ?? 0);
             }
 
             serializedObject.ApplyModifiedProperties();

@@ -13,7 +13,6 @@ MonoBehaviour:
   m_Name: TestRoom
   m_EditorClassIdentifier: THPerfection.LevelGen::THPerfection.LevelGen.Authoring.RoomTemplateDesign
   TemplateId: BIG_ROOMM_3_doors
-  PrefabName: BIG_ROOMM_3_doors
   AllowedFloors: 2
   BaseWeight: 1
   CellSize: 150

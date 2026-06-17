@@ -23,8 +23,8 @@ namespace THPerfection.LevelGen.Authoring
   public sealed class RoomTemplateDesign : ScriptableObject
   {
     [Header("Identity")]
+    [Tooltip("Catalog template id and generated prefab name (without .prefab).")]
     public string TemplateId = "new_room";
-    public string PrefabName = "Room_New";
     public FloorMask AllowedFloors = FloorMask.Main;
     public float BaseWeight = 1f;
     public float CellSize = BuildingGenConfig.DefaultCellSize;
