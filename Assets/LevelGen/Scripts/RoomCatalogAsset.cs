@@ -11,7 +11,7 @@ namespace THPerfection.LevelGen
         [Tooltip("Room prefab root with RoomTemplateAuthoring + cell/door markers.")]
         public GameObject RoomPrefab;
 
-        [Tooltip("Optional override. When null, uses Evaluator on RoomTemplateAuthoring, then hard rules only.")]
+        [Tooltip("Optional override. When null, uses Evaluator on RoomTemplateAuthoring. Subclass DefaultRoomEvaluator for custom weights.")]
         public RoomTemplateBase EvaluatorOverride;
     }
 

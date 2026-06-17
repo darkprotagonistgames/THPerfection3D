@@ -8,6 +8,55 @@ Related: [GameDesign.md](GameDesign.md) (persistent run world, ECS, no round-end
 
 ---
 
+## Architecture — orchestration vs simulation
+
+**Intention:** Room **generation passes** and **bulk spawn** are owned by **GameObjects** (`BuildingRunDirector`). **Placement scoring and weights** live on **per-room `RoomTemplateBase` evaluators** (subclass `DefaultRoomEvaluator` for special cases; assign on prefab or catalog **Evaluator Override**). **Gameplay simulation** stays in **ECS / Burst**.
+
+| Concern | Owner | Examples |
+|---------|--------|----------|
+| **When** to generate / expand | `BuildingRunDirector` (MonoBehaviour) | Run start, event wing, round budget |
+| **Which room fits a doorway + weight** | `RoomTemplateBase` on each room (ScriptableObject) | Subclass `DefaultRoomEvaluator`; catalog **Evaluator Override** |
+| **What rooms exist in the project** | `RoomCatalogAsset` | Prefab list + builtin fallback |
+| **How** to place on the grid | `THPerfection.LevelGen` pure library | `OfficeBuildingGenerator`, hard rules, frontier |
+| **Spawn** room prefabs / anchors | `LevelGenRoomSpawner` under the director | Instantiate art, door states |
+| **Simulate** the live map | ECS systems (Burst-friendly) | Attacks, hurtboxes, enemies, walls, pause |
+
+```mermaid
+flowchart LR
+    subgraph go [GameObject orchestration]
+        Director[BuildingRunDirector]
+        Catalog[RoomCatalogAsset]
+        PerRoom[RoomTemplateBase SO per room]
+        Spawner[LevelGenRoomSpawner]
+    end
+    subgraph lib [Pure LevelGen library]
+        Gen[OfficeBuildingGenerator]
+        State[BuildingRunState]
+    end
+    subgraph ecs [ECS simulation]
+        Sim[Combat / movement / collision systems]
+        Layout[Layout snapshot read-only later]
+    end
+    Catalog --> Director
+    PerRoom --> Gen
+    Director --> Gen
+    Gen --> State
+    Director --> Spawner
+    Spawner --> Sim
+    State --> Layout
+    Layout --> Sim
+```
+
+**Rules for contributors:**
+
+- Do **not** put placement scoring or weight multipliers in a separate run-level policy layer — use **evaluator subclasses**.
+- Do **not** put omen/event logic inside `OfficeBuildingGenerator` or ECS spawn systems.
+- Do **not** make an ECS system pick room types or call `ExpandMainFloor` — **`BuildingRunDirector`** commits layout and triggers spawn.
+- **Many instances spawned at once** → GameObject orchestrator; ECS simulates after spawn.
+- **`LevelGenDebugView`** is dev-only; production scenes use **`BuildingRunDirector`**.
+
+---
+
 ## Goals
 
 - Generate an **office building** layout on a square grid with **doorway-driven expansion**.
@@ -194,7 +243,19 @@ stateDiagram-v2
 
 ## Room-driven probability
 
-Orchestrator only collects candidates and weighted-picks. **Each room type owns scoring.**
+**All placement scoring and weights** live on **`RoomTemplateBase`** ScriptableObjects — one evaluator per room type (or shared across types). Subclass **`DefaultRoomEvaluator`** and override `ApplySoftWeights` for special cases (corridor bias, event-only rooms, etc.).
+
+**Assigning evaluators:**
+
+| Priority | Source |
+|----------|--------|
+| 1 | `RoomCatalogAsset` entry → **Evaluator Override** |
+| 2 | Room prefab → `RoomTemplateAuthoring.Evaluator` |
+| 3 | `HardRulesOnlyEvaluator` (overlap / door alignment only) |
+
+**`BuildingRunDirector`** builds the catalog from `RoomCatalogAsset` and calls the pure generator. It does **not** apply a separate weight-multiplier policy layer.
+
+Orchestrator only collects candidates and weighted-picks. **Each room type owns its score via its evaluator.**
 
 ```csharp
 abstract class RoomTemplateBase : ScriptableObject
@@ -280,19 +341,23 @@ Local **X = grid X**, **Z = grid Z**, one cell = `CellSize` world units (beta de
 
 ### Runtime spawn pipeline
 
-1. Generator produces `RoomInstance` (pose + `DoorStates`).
-2. `RoomSpawnSystem` instantiates room entity prefab at world transform.
-3. `RoomBootstrapSystem` applies door visuals per socket state; rolls prop slots; registers anchor/spawn placeholders.
+1. **`BuildingRunDirector.StartRun` / `ExpandRun`** — `RoomCatalogAsset.BuildCatalog()`, run generator into **`BuildingRunState`**, spawn new instances.
+2. **`LevelGenRoomSpawner`** — instantiate room prefabs; apply door visuals from `RoomInstance` door states.
+3. **ECS** — read committed layout / room entities; **no room picking in systems**.
 
 ```csharp
-struct RoomInstancePayload : IComponentData
+// Director (GameObject)
+director.StartRun(runSeed);
+director.ExpandRun(additionalRoomCount);
+
+// Per-room evaluator (ScriptableObject) — subclass for custom weights
+public sealed class HallPrefersStraightEvaluator : DefaultRoomEvaluator
 {
-    FixedString64Bytes TemplateId;
-    FloorId Floor;
-    int2 Origin;
-    byte Rotation90;
-    // ref to per-socket door states
+    protected override float ApplySoftWeights(...) { ... return weight * bonus; }
 }
+
+// Catalog entry can override prefab evaluator without editing the prefab
+// RoomCatalogSourceEntry.EvaluatorOverride = myHallEvaluator;
 ```
 
 ---
@@ -301,11 +366,12 @@ struct RoomInstancePayload : IComponentData
 
 | Concern | Approach |
 |---------|----------|
+| **Orchestration** | `BuildingRunDirector` on a scene GameObject |
 | Top-down / -Z forward | Author rooms facing -Z; rotation math aligns with `TopDownPlane` |
-| ECS | Generator runs at run start or on additive passes; spawn via entity prefabs + ECB (see `PrefabSpawnerSystem`, baking patterns) |
-| Persistent world | Building layout is baseline run layer; omens/events add content — **no full regen between rounds** |
-| Camera / spawn | Per-room placeholder slots; no generator-level bounds |
-| Determinism | `Unity.Mathematics.Random` + run seed |
+| ECS | Director commits layout + spawn; simulation systems read layout — **director spawns, ECS simulates** |
+| Persistent world | `BuildingRunState` is baseline run layer; events change **catalog membership or evaluator SO refs**, not the core algorithm |
+| Camera / spawn | Per-room placeholder slots; director/spawner registers anchors |
+| Determinism | `Unity.Mathematics.Random` + run seed on director |
 
 ---
 
@@ -316,7 +382,7 @@ struct RoomInstancePayload : IComponentData
 | **1** | Beta | Per-floor grid, polyomino rotation, `RoomTemplateBase` hard zeros, unit tests (`FloorId` types included) |
 | **2** | Beta | Main-floor expansion, end-pass door classification, debug Gizmos |
 | **3** | Beta | Prefab authoring components, baker, catalog, spawn + bootstrap |
-| **4** | Beta | Re-entry frontier from `Open` edges; hook into run start / events |
+| **4** | Beta | `BuildingRunDirector`; re-entry frontier; hook run start / events |
 | **5** | **Post-beta** | Basement + attic + vertical link templates; multi-floor orchestrator |
 
 Phases 1–4 ship the playable **single-floor** building for beta. Phase 5 revisits multi-floor when the team is ready — the plan and code should not block that add-on.
@@ -331,9 +397,11 @@ Phases 1–4 ship the playable **single-floor** building for beta. Phase 5 revis
 Assets/LevelGen/
   RoomCatalog.asset
   RoomTemplates/          # prefabs
-  Evaluators/             # RoomTemplateBase ScriptableObjects
+  Evaluators/             # RoomTemplateBase ScriptableObjects (subclass DefaultRoomEvaluator)
   PropTables/
   Scripts/
+    BuildingRunDirector.cs
+    LevelGenRoomSpawner.cs
     RoomTemplateAuthoring.cs
     DoorSocketMarker.cs
     PropSlotAuthoring.cs
@@ -341,11 +409,11 @@ Assets/LevelGen/
     RoomTemplateBase.cs
     RoomCatalog.cs
     OfficeBuildingGenerator.cs
-    RoomSpawnSystem.cs
-    RoomBootstrapSystem.cs
+    BuildingRunState.cs
   Editor/
     RoomTemplateValidator.cs
     RoomGridSnapEditor.cs
+    LevelGenDebugView.cs      # dev gizmos only
 ```
 
 ---
@@ -369,3 +437,6 @@ Assets/LevelGen/
 - Generator spawns per-cell wall/door prefabs instead of room prefab + socket toggles.
 - Props only in C# lists → designers cannot iterate.
 - Rebaking rooms when doors close → door state is **runtime payload**, not bake data.
+- **Room picking or bulk spawn inside ECS systems** → use `BuildingRunDirector`; ECS simulates after commit.
+- **Run-level weight multipliers outside evaluators** → subclass `DefaultRoomEvaluator` or swap **Evaluator Override** on catalog entries.
+- **Omen/event logic in `OfficeBuildingGenerator`** → swap evaluators, add/remove catalog entries, or evaluator `ApplySoftWeights` with run context (future).

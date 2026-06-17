@@ -20,6 +20,7 @@ namespace THPerfection.LevelGen.Authoring
         public float CellSize = BuildingGenConfig.DefaultCellSize;
 
         [Header("Evaluation")]
+        [Tooltip("Placement scorer for this room. Subclass DefaultRoomEvaluator for custom weights. Catalog Evaluator Override wins if set.")]
         public RoomTemplateBase Evaluator;
 
         [Header("Markers")]

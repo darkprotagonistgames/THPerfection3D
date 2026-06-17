@@ -10,32 +10,41 @@ namespace THPerfection.LevelGen.Editor
         {
             serializedObject.Update();
             var view = (LevelGenDebugView)target;
+            BuildingRunDirector director = view.Director;
 
             EditorGUILayout.PropertyField(serializedObject.FindProperty("RandomizeSeedOnGenerate"));
 
             using (new EditorGUI.DisabledScope(view.RandomizeSeedOnGenerate))
             {
-                EditorGUILayout.PropertyField(serializedObject.FindProperty("Seed"));
+                if (director != null)
+                {
+                    using (var directorSo = new SerializedObject(director))
+                    {
+                        directorSo.Update();
+                        EditorGUILayout.PropertyField(directorSo.FindProperty("RunSeed"));
+                        directorSo.ApplyModifiedProperties();
+                    }
+                }
             }
 
             if (view.RandomizeSeedOnGenerate)
-                EditorGUILayout.HelpBox("Seed randomizes on each generate. Uncheck above to pin a specific seed.", MessageType.Info);
+                EditorGUILayout.HelpBox("Seed randomizes on each generate. Uncheck above to pin Run Seed on the director.", MessageType.Info);
 
             EditorGUILayout.Space(4f);
 
             EditorGUILayout.BeginHorizontal();
             if (GUILayout.Button("Randomize Seed"))
             {
-                Undo.RecordObject(view, "Randomize Level Gen Seed");
+                Undo.RecordObject(director, "Randomize Level Gen Seed");
                 view.RandomizeSeed();
-                EditorUtility.SetDirty(view);
+                EditorUtility.SetDirty(director);
             }
 
             if (GUILayout.Button("Generate Main Floor"))
             {
-                Undo.RecordObject(view, "Generate Main Floor");
+                Undo.RecordObject(director, "Generate Main Floor");
                 view.GenerateMainFloor();
-                EditorUtility.SetDirty(view);
+                EditorUtility.SetDirty(director);
                 SceneView.RepaintAll();
             }
 
@@ -43,9 +52,9 @@ namespace THPerfection.LevelGen.Editor
             {
                 if (GUILayout.Button("Continue Expansion"))
                 {
-                    Undo.RecordObject(view, "Continue Level Gen Expansion");
+                    Undo.RecordObject(director, "Continue Level Gen Expansion");
                     view.ContinueExpansion();
-                    EditorUtility.SetDirty(view);
+                    EditorUtility.SetDirty(director);
                     SceneView.RepaintAll();
                 }
             }
@@ -68,29 +77,35 @@ namespace THPerfection.LevelGen.Editor
             EditorGUILayout.EndHorizontal();
 
             EditorGUILayout.Space(8f);
-            EditorGUILayout.LabelField("Visual Spawn", EditorStyles.boldLabel);
-            EditorGUILayout.PropertyField(serializedObject.FindProperty("SpawnVisualsOnGenerate"));
+            EditorGUILayout.LabelField("Director", EditorStyles.boldLabel);
 
-            var spawner = view.RoomSpawner;
-            if (spawner != null)
+            if (director != null)
             {
-                using (var so = new SerializedObject(spawner))
+                using (var directorSo = new SerializedObject(director))
                 {
-                    so.Update();
-                    EditorGUILayout.PropertyField(so.FindProperty("DefaultRoomPrefab"));
-                    EditorGUILayout.PropertyField(so.FindProperty("PrefabMappings"), true);
-                    EditorGUILayout.PropertyField(so.FindProperty("UseProceduralFallback"));
-                    so.ApplyModifiedProperties();
+                    directorSo.Update();
+                    EditorGUILayout.PropertyField(directorSo.FindProperty("CatalogAsset"));
+                    EditorGUILayout.PropertyField(directorSo.FindProperty("Config"), includeChildren: true);
+                    EditorGUILayout.PropertyField(directorSo.FindProperty("SpawnRoomsOnCommit"));
+
+                    var spawner = director.RoomSpawner;
+                    if (spawner != null)
+                    {
+                        EditorGUILayout.Space(4f);
+                        EditorGUILayout.LabelField("Room Spawner", EditorStyles.boldLabel);
+                        using (var spawnerSo = new SerializedObject(spawner))
+                        {
+                            spawnerSo.Update();
+                            EditorGUILayout.PropertyField(spawnerSo.FindProperty("DefaultRoomPrefab"));
+                            EditorGUILayout.PropertyField(spawnerSo.FindProperty("PrefabMappings"), true);
+                            EditorGUILayout.PropertyField(spawnerSo.FindProperty("UseProceduralFallback"));
+                            spawnerSo.ApplyModifiedProperties();
+                        }
+                    }
+
+                    directorSo.ApplyModifiedProperties();
                 }
             }
-
-            EditorGUILayout.Space(8f);
-            EditorGUILayout.LabelField("Catalog", EditorStyles.boldLabel);
-            EditorGUILayout.PropertyField(serializedObject.FindProperty("CatalogAsset"));
-
-            EditorGUILayout.Space(8f);
-            EditorGUILayout.LabelField("Config", EditorStyles.boldLabel);
-            EditorGUILayout.PropertyField(serializedObject.FindProperty("Config"), includeChildren: true);
 
             EditorGUILayout.Space(8f);
             EditorGUILayout.LabelField("Gizmo Colors", EditorStyles.boldLabel);

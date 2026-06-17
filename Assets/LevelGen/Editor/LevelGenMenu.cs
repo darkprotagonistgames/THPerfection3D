@@ -10,17 +10,31 @@ namespace THPerfection.LevelGen.Editor
         [MenuItem("TH Perfection/Level Gen/Generate Test Floor In Scene")]
         static void GenerateTestFloorInScene()
         {
-            var existing = Object.FindFirstObjectByType<LevelGenDebugView>();
-            LevelGenDebugView view = existing != null
-                ? existing
-                : new GameObject("LevelGenDebugView").AddComponent<LevelGenDebugView>();
-
-            if (existing == null)
-                Undo.RegisterCreatedObjectUndo(view.gameObject, "Create LevelGenDebugView");
-
-            view.GenerateMainFloor();
-            Selection.activeGameObject = view.gameObject;
+            BuildingRunDirector director = FindOrCreateDirector();
+            director.StartRun();
+            Selection.activeGameObject = director.gameObject;
             SceneView.RepaintAll();
+        }
+
+        [MenuItem("TH Perfection/Level Gen/Create Building Run Director In Scene")]
+        static BuildingRunDirector CreateBuildingRunDirectorInScene()
+        {
+            BuildingRunDirector director = FindOrCreateDirector();
+            Selection.activeGameObject = director.gameObject;
+            return director;
+        }
+
+        static BuildingRunDirector FindOrCreateDirector()
+        {
+            var existing = Object.FindFirstObjectByType<BuildingRunDirector>();
+            if (existing != null)
+                return existing;
+
+            var go = new GameObject("BuildingRunDirector");
+            Undo.RegisterCreatedObjectUndo(go, "Create BuildingRunDirector");
+            var director = go.AddComponent<BuildingRunDirector>();
+            go.AddComponent<LevelGenDebugView>();
+            return director;
         }
 
         [MenuItem("TH Perfection/Level Gen/Create Room Catalog Asset")]

@@ -4,28 +4,20 @@ using UnityEngine;
 
 namespace THPerfection.LevelGen
 {
+    /// <summary>
+    /// Editor/dev wrapper around <see cref="BuildingRunDirector"/> with gizmos and seed randomization.
+    /// Production runs should use BuildingRunDirector directly in the scene.
+    /// </summary>
     [DisallowMultipleComponent]
+    [RequireComponent(typeof(BuildingRunDirector))]
     public sealed class LevelGenDebugView : MonoBehaviour
     {
-        [Header("Catalog")]
-        [Tooltip("Authored room prefabs baked at generate time. When null, uses builtin templates only.")]
-        public RoomCatalogAsset CatalogAsset;
-
-        [Header("Generation")]
-        public BuildingGenConfig Config = BuildingGenConfig.Default;
-
-        [Tooltip("When enabled, picks a new seed each time you generate. Disable to use Seed below.")]
+        [Header("Debug")]
+        [Tooltip("When enabled, picks a new seed each time you generate. Disable to pin Run Seed on the director.")]
         public bool RandomizeSeedOnGenerate = true;
 
-        [Tooltip("Used when Randomize Seed On Generate is disabled. Reusable for reproducible layouts.")]
-        public uint Seed = 1;
-
-        [Header("Expansion")]
         [Min(1)]
         public int AdditionalRoomsOnContinue = 4;
-
-        [Header("Visual Spawn")]
-        public bool SpawnVisualsOnGenerate = true;
 
         [Header("Gizmo Colors")]
         public Color RoomFillColor = new(0.2f, 0.45f, 0.85f, 0.25f);
@@ -33,46 +25,26 @@ namespace THPerfection.LevelGen
         public Color ConnectedDoorColor = new(0.2f, 0.9f, 0.35f, 1f);
         public Color ClosedDoorColor = new(0.85f, 0.25f, 0.2f, 1f);
 
-        [Header("Last Result")]
-        [SerializeField] int _roomCount;
-        [SerializeField] int _openFrontierCount;
+        BuildingRunDirector _director;
 
-        BuildingGenerationResult _result;
-        BuildingRunState _runState;
-        LevelGenRoomSpawner _roomSpawner;
-        RoomCatalog _lastCatalog;
-
-        public BuildingGenerationResult Result => _result;
-        public BuildingRunState RunState => _runState;
-        public RoomCatalog LastCatalog => _lastCatalog;
-
-        void Reset()
-        {
-            EnsureRoomSpawner();
-        }
-
-        void EnsureRoomSpawner()
-        {
-            if (_roomSpawner == null)
-                _roomSpawner = GetComponent<LevelGenRoomSpawner>();
-
-            if (_roomSpawner == null)
-                _roomSpawner = gameObject.AddComponent<LevelGenRoomSpawner>();
-        }
-
-        public LevelGenRoomSpawner RoomSpawner
+        public BuildingRunDirector Director
         {
             get
             {
-                EnsureRoomSpawner();
-                return _roomSpawner;
+                if (_director == null)
+                    _director = GetComponent<BuildingRunDirector>();
+                return _director;
             }
         }
+
+        public BuildingGenerationResult Result => Director.LastResult;
+        public BuildingRunState RunState => Director.RunState;
+        public LevelGenRoomSpawner RoomSpawner => Director.RoomSpawner;
 
         [ContextMenu("Randomize Seed")]
         public void RandomizeSeed()
         {
-            Seed = (uint)UnityEngine.Random.Range(1, int.MaxValue);
+            Director.RunSeed = (uint)UnityEngine.Random.Range(1, int.MaxValue);
         }
 
         [ContextMenu("Generate Main Floor")]
@@ -81,95 +53,46 @@ namespace THPerfection.LevelGen
             if (RandomizeSeedOnGenerate)
                 RandomizeSeed();
 
-            Config.Seed = Seed;
-            _lastCatalog = ResolveCatalog();
-            _runState = new BuildingRunState(Config);
-            OfficeBuildingGenerator.GenerateMainFloorInto(_runState, _lastCatalog);
-            _result = _runState.ToResult(CollectOpenFrontier());
-            _roomCount = _result.Instances.Count;
-            _openFrontierCount = _result.OpenFrontier.Count;
-            Debug.Log($"[LevelGen] Seed {Seed}: {_roomCount} rooms, {_openFrontierCount} open doorways.");
-
-            if (SpawnVisualsOnGenerate)
-                SpawnVisuals(_lastCatalog);
+            Director.StartRun(Director.RunSeed);
+            LogRunSummary("Generate");
         }
 
         [ContextMenu("Continue Expansion")]
         public void ContinueExpansion()
         {
-            if (_runState == null || _runState.Instances.Count == 0)
-            {
-                Debug.LogWarning("[LevelGen] Generate a floor before continuing expansion.");
-                return;
-            }
-
-            _lastCatalog ??= ResolveCatalog();
-            ExpansionResult expansion = OfficeBuildingGenerator.ExpandMainFloor(
-                _runState,
-                _lastCatalog,
+            ExpansionResult expansion = Director.ExpandRun(
                 AdditionalRoomsOnContinue,
-                expansionSeed: Seed);
+                expansionSeedOverride: Director.RunSeed);
 
-            _result = expansion.Snapshot;
-            _roomCount = _result.Instances.Count;
-            _openFrontierCount = _result.OpenFrontier.Count;
             Debug.Log(
-                $"[LevelGen] Continued expansion (seed {Seed}): +{expansion.AddedInstances.Count} rooms "
-                + $"({expansion.RoomsBefore} → {expansion.RoomsAfter}), {_openFrontierCount} open doorways.");
-
-            if (SpawnVisualsOnGenerate)
-            {
-                if (expansion.AddedInstances.Count > 0)
-                    RoomSpawner.SpawnAdditional(expansion.AddedInstances, Config, _lastCatalog);
-                else
-                    Debug.Log("[LevelGen] No new rooms were placed this pass.");
-            }
+                $"[LevelGen] Continued expansion (seed {Director.RunSeed}): +{expansion.AddedInstances.Count} rooms "
+                + $"({expansion.RoomsBefore} → {expansion.RoomsAfter}).");
         }
 
-        IReadOnlyList<DoorwaySlot> CollectOpenFrontier()
+        public void SpawnVisuals() => Director.RespawnAllRooms();
+
+        public void ClearVisuals() => Director.ClearRun();
+
+        void LogRunSummary(string label)
         {
-            if (_runState == null)
-                return System.Array.Empty<DoorwaySlot>();
-
-            _runState.RestoreFrontier(_lastCatalog ?? ResolveCatalog(), out DoorwayFrontier frontier, out _);
-            return new List<DoorwaySlot>(frontier.OpenSlots);
-        }
-
-        public RoomCatalog ResolveCatalog() =>
-            CatalogAsset != null ? CatalogAsset.BuildCatalog() : RoomCatalog.CreateDefaultMainFloor();
-
-        public void SpawnVisuals()
-        {
-            SpawnVisuals(_lastCatalog ?? ResolveCatalog());
-        }
-
-        public void SpawnVisuals(RoomCatalog catalog)
-        {
-            if (_result == null)
-            {
-                Debug.LogWarning("[LevelGen] Generate a floor before spawning visuals.");
-                return;
-            }
-
-            RoomSpawner.Spawn(_result, Config, catalog);
-        }
-
-        public void ClearVisuals()
-        {
-            RoomSpawner.ClearSpawned();
+            BuildingGenerationResult result = Director.LastResult;
+            int rooms = result?.Instances.Count ?? 0;
+            int frontier = result?.OpenFrontier.Count ?? 0;
+            Debug.Log($"[LevelGen] {label} seed {Director.RunSeed}: {rooms} rooms, {frontier} open doorways.");
         }
 
         void OnDrawGizmosSelected()
         {
-            if (_result == null)
+            BuildingGenerationResult result = Director.LastResult;
+            if (result == null)
                 return;
 
-            if (!_result.Occupancy.TryGetFloor(_result.Floor, out FloorGrid grid))
+            if (!result.Occupancy.TryGetFloor(result.Floor, out FloorGrid grid))
                 return;
 
-            float cellSize = Mathf.Max(0.01f, Config.CellSize);
-            float y = Config.FloorY + 0.05f;
-            float doorY = Config.FloorY + 0.5f;
+            float cellSize = Mathf.Max(0.01f, Director.Config.CellSize);
+            float y = Director.Config.FloorY + 0.05f;
+            float doorY = Director.Config.FloorY + 0.5f;
 
             foreach (var (gridCell, occupied) in grid.Cells)
             {
@@ -178,7 +101,7 @@ namespace THPerfection.LevelGen
                 Gizmos.DrawCube(center, new Vector3(cellSize * 0.92f, 0.1f, cellSize * 0.92f));
             }
 
-            foreach (RoomInstance instance in _result.Instances)
+            foreach (RoomInstance instance in result.Instances)
             {
                 foreach (var (key, state) in instance.DoorStates)
                 {

@@ -7,7 +7,7 @@ Central design reference for this Unity project. Agents and contributors should 
 | Doc | Contents |
 |-----|----------|
 | [GameDesign.md](GameDesign.md) | Round-based top-down bullet hell; roguelike rounds; omens (pick 3, discard 1); event rolls; persistent active map; ECS; run world layers |
-| [LevelGenPlan.md](LevelGenPlan.md) | Procedural office building (beta: main floor; later: multi-floor), grid rooms, doorway expansion, prefab authoring, door lifecycle |
+| [LevelGenPlan.md](LevelGenPlan.md) | Procedural office building; **BuildingRunDirector**; per-room evaluator SOs; ECS simulates after spawn |
 | [SpatialOccupancyPlan.md](SpatialOccupancyPlan.md) | Post-beta: per-entity grid cell + room tracking from transforms, `IEnableableComponent` change signals, pathfinding and camera hooks |
 
 **Short summary:** Gameplay is active top-down bullet hell on a map where all entities simulate. Runs advance in **rounds**. Each round the player keeps **two of three omens**, which shape **event** probability; events add spawns, locations, etc. **Nothing is wiped between rounds**—the world accumulates.

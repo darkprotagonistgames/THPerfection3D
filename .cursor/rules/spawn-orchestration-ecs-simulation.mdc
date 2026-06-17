@@ -1,0 +1,41 @@
+---
+description: Spawn orchestration on GameObjects; gameplay simulation in ECS/Burst
+alwaysApply: true
+---
+
+# Spawn orchestration vs ECS simulation
+
+## Split of responsibilities
+
+| Layer | Use for | Avoid for |
+|-------|---------|-----------|
+| **GameObject orchestrators** | Bulk spawn, procedural layout, when to generate/expand | Per-frame combat, collision, movement |
+| **ScriptableObject evaluators** | Per-room placement scoring and weights (`RoomTemplateBase` subclasses) | Hot-path simulation |
+| **Pure C# libraries** | Grid/placement algorithms testable without Unity scene | Unity lifecycle, spawning |
+| **ECS + Burst systems** | Attacks, hurtboxes, enemies, walls, pause, spatial queries on many entities | Picking rooms, spawning dozens of layout pieces |
+
+## Rules
+
+- If something **spawns a lot of elements at once** (rooms, props, enemy waves), control it from a **MonoBehaviour director** — not from an ECS system.
+- **Room weights:** subclass **`DefaultRoomEvaluator`**; assign on prefab or catalog **Evaluator Override**. No separate run-level weight-multiplier policy layer.
+- **Room generation:** `BuildingRunDirector` + `RoomCatalogAsset` + per-room evaluators — see [LevelGenPlan.md](Assets/DesignDock/LevelGenPlan.md).
+- **After spawn / layout commit**, ECS simulates the live map. Systems may **read** layout snapshots; they do **not** own generation or bulk instantiation.
+- Prefer **Burst-compatible** `ISystem` / `IJobEntity` for gameplay that scales with entity count.
+
+## Examples
+
+```csharp
+// ✅ Director commits layout and spawns rooms (GameObject)
+director.StartRun(seed);
+director.ExpandRun(additionalRooms);
+
+// ✅ Custom weight via evaluator subclass
+public sealed class VaultRoomEvaluator : DefaultRoomEvaluator { ... }
+
+// ✅ ECS simulates after entities exist
+[BurstCompile]
+public partial struct ConeAttackSystem : ISystem { ... }
+
+// ❌ ECS system that picks room templates and Instantiate()s floor prefabs
+// ❌ Separate SO that multiplies all room weights without placement logic
+```
