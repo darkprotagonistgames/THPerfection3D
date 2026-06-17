@@ -60,8 +60,6 @@ namespace THPerfection.LevelGen.Editor
             }
             EditorGUILayout.EndHorizontal();
 
-            EditorGUILayout.PropertyField(serializedObject.FindProperty("AdditionalRoomsOnContinue"));
-
             EditorGUILayout.BeginHorizontal();
             if (GUILayout.Button("Spawn Visuals"))
             {

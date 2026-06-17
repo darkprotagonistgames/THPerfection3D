@@ -69,6 +69,9 @@ namespace THPerfection.LevelGen
             RunStarted?.Invoke(_lastResult);
         }
 
+        public ExpansionResult ExpandRun(uint? expansionSeedOverride = null) =>
+            ExpandRun(Config.AdditionalRoomsOnExpand, expansionSeedOverride);
+
         public ExpansionResult ExpandRun(int additionalRoomCount, uint? expansionSeedOverride = null)
         {
             if (_runState == null || _runState.Instances.Count == 0)

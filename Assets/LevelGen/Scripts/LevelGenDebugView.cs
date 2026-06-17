@@ -16,9 +16,6 @@ namespace THPerfection.LevelGen
         [Tooltip("When enabled, picks a new seed each time you generate. Disable to pin Run Seed on the director.")]
         public bool RandomizeSeedOnGenerate = true;
 
-        [Min(1)]
-        public int AdditionalRoomsOnContinue = 4;
-
         [Header("Gizmo Colors")]
         public Color RoomFillColor = new(0.2f, 0.45f, 0.85f, 0.25f);
         public Color OpenDoorColor = new(1f, 0.85f, 0.1f, 1f);
@@ -60,9 +57,7 @@ namespace THPerfection.LevelGen
         [ContextMenu("Continue Expansion")]
         public void ContinueExpansion()
         {
-            ExpansionResult expansion = Director.ExpandRun(
-                AdditionalRoomsOnContinue,
-                expansionSeedOverride: Director.RunSeed);
+            ExpansionResult expansion = Director.ExpandRun(expansionSeedOverride: Director.RunSeed);
 
             Debug.Log(
                 $"[LevelGen] Continued expansion (seed {Director.RunSeed}): +{expansion.AddedInstances.Count} rooms "

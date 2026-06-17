@@ -10,6 +10,9 @@ namespace THPerfection.LevelGen
 
         public uint Seed;
         public int TargetRoomCount;
+        [UnityEngine.Min(0)]
+        [UnityEngine.Tooltip("Rooms to add on each ExpandRun() when no count is passed explicitly.")]
+        public int AdditionalRoomsOnExpand;
         public int MaxAttemptsPerDoorway;
         public int MinOpenDoorwaysBeforeDeadEnd;
         public int MinPlacedRoomsBeforeDeadEnd;
@@ -21,6 +24,7 @@ namespace THPerfection.LevelGen
         {
             Seed                   = 1,
             TargetRoomCount        = 12,
+            AdditionalRoomsOnExpand = 4,
             MaxAttemptsPerDoorway       = 8,
             MinOpenDoorwaysBeforeDeadEnd  = 2,
             MinPlacedRoomsBeforeDeadEnd   = 3,

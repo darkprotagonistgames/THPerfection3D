@@ -26,10 +26,11 @@ namespace THPerfection.LevelGen.Editor
 
             using (new EditorGUI.DisabledScope(director.RunState == null || director.RunState.Instances.Count == 0))
             {
-                if (GUILayout.Button("Expand +4"))
+                int expandCount = Mathf.Max(0, director.Config.AdditionalRoomsOnExpand);
+                if (GUILayout.Button($"Expand +{expandCount}"))
                 {
                     Undo.RecordObject(director, "Expand Building Run");
-                    director.ExpandRun(4, director.RunSeed);
+                    director.ExpandRun(director.RunSeed);
                     EditorUtility.SetDirty(director);
                     SceneView.RepaintAll();
                 }
