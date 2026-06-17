@@ -130,6 +130,27 @@ namespace THPerfection.LevelGen.Tests
         }
 
         [Test]
+        public void ReclassifyDoorStates_marksSurroundedMatedDoorsConnected()
+        {
+            var catalog = TestCatalog();
+            var state = BuildSurroundedCrossLayout();
+            RoomInstance inner = state.Instances[0];
+
+            foreach (KeyValuePair<DoorEdgeKey, CellDoorState> entry in inner.DoorStates)
+                inner.SetDoorState(entry.Key, CellDoorState.Open);
+
+            OfficeBuildingGenerator.ReclassifyDoorStates(state, catalog);
+
+            foreach (KeyValuePair<DoorEdgeKey, CellDoorState> entry in inner.DoorStates)
+            {
+                Assert.AreEqual(
+                    CellDoorState.Connected,
+                    entry.Value,
+                    $"Surrounded mated door {entry.Key} should be Connected.");
+            }
+        }
+
+        [Test]
         public void RestoreExpansionFrontier_retriesNonWallExteriorDoors()
         {
             var catalog = TestCatalog();
@@ -151,6 +172,38 @@ namespace THPerfection.LevelGen.Tests
             Assert.IsTrue(
                 FrontierContains(frontier, exteriorDoor),
                 "Expansion frontier should retry non-wall exterior doors even when previously closed.");
+        }
+
+        static BuildingRunState BuildSurroundedCrossLayout()
+        {
+            var state = new BuildingRunState(Config(roomCount: 1, seed: 1));
+            FloorGrid grid = state.Occupancy.GetOrCreateFloor(FloorId.Main);
+
+            RoomTemplateDefinition cross = RoomBuiltinTemplates.FourWayCross;
+            int2 crossOrigin = new int2(5, 5);
+            var inner = new RoomInstance(191, cross, FloorId.Main, crossOrigin, Rotation90.R0);
+            grid.StampRoom(cross, crossOrigin, Rotation90.R0, inner.Id);
+            state.Instances.Add(inner);
+
+            StampNeighbor(state, grid, RoomBuiltinTemplates.OneByOneNorth, new int2(5, 4), 192);
+            StampNeighbor(state, grid, RoomBuiltinTemplates.OneByOneSouth, new int2(5, 7), 193);
+            StampNeighbor(state, grid, RoomBuiltinTemplates.TwoByOneHall, new int2(7, 5), 194);
+            StampNeighbor(state, grid, RoomBuiltinTemplates.OneByOneEast, new int2(3, 5), 195);
+
+            OfficeBuildingGenerator.ReclassifyDoorStates(state, TestCatalog());
+            return state;
+        }
+
+        static void StampNeighbor(
+            BuildingRunState state,
+            FloorGrid grid,
+            RoomTemplateDefinition template,
+            int2 origin,
+            int id)
+        {
+            var instance = new RoomInstance(id, template, FloorId.Main, origin, Rotation90.R0);
+            grid.StampRoom(template, origin, Rotation90.R0, id);
+            state.Instances.Add(instance);
         }
 
         static BuildingRunState BuildWallContactLayout()

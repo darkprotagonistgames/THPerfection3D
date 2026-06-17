@@ -112,6 +112,23 @@ namespace THPerfection.LevelGen
                 roomsBefore);
         }
 
+        /// <summary>
+        /// Re-applies door classification from layout geometry. Use after fixing classification
+        /// rules or to refresh stale logical states on an existing run.
+        /// </summary>
+        public static void ReclassifyDoorStates(BuildingRunState state, RoomCatalog catalog)
+        {
+            if (state == null)
+                throw new System.ArgumentNullException(nameof(state));
+
+            if (!state.Occupancy.TryGetFloor(state.Floor, out FloorGrid grid))
+                return;
+
+            state.RestoreExpansionFrontier(catalog, out DoorwayFrontier frontier, out HashSet<DoorEdgeKey> connected);
+            frontier.RestoreDead(state.DeadDoorways);
+            ClassifyDoorStates(grid, frontier, connected, catalog, state.Instances, state.Floor);
+        }
+
         static void RunInitialPass(BuildingRunState state, RoomCatalog catalog)
         {
             uint seed = ResolvePassSeed(state, expansionSeed: 0);
@@ -475,18 +492,20 @@ namespace THPerfection.LevelGen
                              template, instance.Origin, instance.Rotation))
                 {
                     var key = new DoorEdgeKey(socket, floor);
+                    int2 neighbor = socket.Cell + GridTransforms.Direction(socket.Side);
                     CellDoorState state;
 
-                    if (connected.Contains(key))
+                    if (connected.Contains(key)
+                        || RoomPlacementRules.HasMatedDoor(grid, socket.Cell, socket.Side))
                         state = CellDoorState.Connected;
                     else if (RoomPlacementRules.FacesAdjacentWall(grid, socket.Cell, socket.Side))
                         state = CellDoorState.Closed;
                     else if (frontier.IsDead(key))
                         state = CellDoorState.Closed;
-                    else if (openKeys.Contains(key))
+                    else if (openKeys.Contains(key) || !grid.IsOccupied(neighbor))
                         state = CellDoorState.Open;
                     else
-                        state = CellDoorState.Open;
+                        state = CellDoorState.Closed;
 
                     instance.SetDoorState(key, state);
                 }

@@ -20,7 +20,7 @@ namespace THPerfection.LevelGen
 
         [SerializeField] DoorSocketVisual[] _doorVisuals = Array.Empty<DoorSocketVisual>();
 
-        public void ApplyFromInstance(RoomInstance instance)
+        public void ApplyFromInstance(RoomInstance instance, RoomDoorVisualPhase phase = RoomDoorVisualPhase.Gameplay)
         {
             foreach (DoorSocketVisual entry in _doorVisuals)
             {
@@ -35,8 +35,7 @@ namespace THPerfection.LevelGen
                     continue;
                 }
 
-                bool showOpen = state is CellDoorState.Open or CellDoorState.Connected;
-                SetDoorVisual(entry, showOpen);
+                SetDoorVisual(entry, RoomDoorVisualRules.ShouldShowOpen(state, phase));
             }
         }
 

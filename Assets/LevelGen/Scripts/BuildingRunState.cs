@@ -121,7 +121,7 @@ namespace THPerfection.LevelGen
                 {
                     var key = new DoorEdgeKey(socket, Floor);
 
-                    if (IsMatedDoor(grid, socket))
+                    if (RoomPlacementRules.HasMatedDoor(grid, socket.Cell, socket.Side))
                     {
                         connected.Add(key);
                         continue;
@@ -164,18 +164,6 @@ namespace THPerfection.LevelGen
         {
             int2 neighbor = key.Cell + GridTransforms.Direction(key.Side);
             return !grid.IsOccupied(neighbor);
-        }
-
-        static bool IsMatedDoor(FloorGrid grid, in DoorSocket socket)
-        {
-            int2 neighbor = socket.Cell + GridTransforms.Direction(socket.Side);
-            if (!grid.IsOccupied(neighbor))
-                return false;
-
-            if (!grid.TryGet(neighbor, out OccupiedCell occupied))
-                return false;
-
-            return GridTransforms.HasDoor(occupied.Doors, GridTransforms.Opposite(socket.Side));
         }
     }
 }

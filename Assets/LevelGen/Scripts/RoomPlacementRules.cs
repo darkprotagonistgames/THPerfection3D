@@ -74,6 +74,22 @@ namespace THPerfection.LevelGen
             return !GridTransforms.HasDoor(occupied.Doors, GridTransforms.Opposite(side));
         }
 
+        /// <summary>
+        /// True when the neighbor cell is occupied and has a door on the shared edge.
+        /// </summary>
+        public static bool HasMatedDoor(FloorGrid grid, int2 doorCell, DoorSide side)
+        {
+            int2 neighbor = doorCell + GridTransforms.Direction(side);
+
+            if (!grid.IsOccupied(neighbor))
+                return false;
+
+            if (!grid.TryGet(neighbor, out OccupiedCell occupied))
+                return false;
+
+            return GridTransforms.HasDoor(occupied.Doors, GridTransforms.Opposite(side));
+        }
+
         public static bool TryValidate(
             in PlacementContext ctx,
             in RoomTemplateDefinition template,

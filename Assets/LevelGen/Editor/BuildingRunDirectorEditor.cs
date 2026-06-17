@@ -46,6 +46,23 @@ namespace THPerfection.LevelGen.Editor
 
             EditorGUILayout.EndHorizontal();
 
+            EditorGUILayout.BeginHorizontal();
+            using (new EditorGUI.DisabledScope(director.RunState == null || director.RunState.Instances.Count == 0))
+            {
+                if (GUILayout.Button("Doors: Spawning"))
+                {
+                    director.EnterSpawningDoorPhase();
+                    SceneView.RepaintAll();
+                }
+
+                if (GUILayout.Button("Doors: Gameplay"))
+                {
+                    director.EnterGameplayDoorPhase();
+                    SceneView.RepaintAll();
+                }
+            }
+            EditorGUILayout.EndHorizontal();
+
             EditorGUILayout.Space(4f);
             using (new EditorGUI.DisabledScope(true))
             {

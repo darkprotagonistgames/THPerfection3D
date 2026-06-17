@@ -30,6 +30,9 @@ namespace THPerfection.LevelGen
 
         RoomCatalog _activeCatalog;
         Transform _spawnRoot;
+        RoomDoorVisualPhase _doorVisualPhase = RoomDoorVisualPhase.Gameplay;
+
+        public RoomDoorVisualPhase DoorVisualPhase => _doorVisualPhase;
 
         public Transform SpawnRoot
         {
@@ -45,6 +48,29 @@ namespace THPerfection.LevelGen
                 }
 
                 return _spawnRoot;
+            }
+        }
+
+        public void SetDoorVisualPhase(RoomDoorVisualPhase phase) => _doorVisualPhase = phase;
+
+        public void ApplyDoorVisualPhase(
+            RoomDoorVisualPhase phase,
+            IReadOnlyList<RoomInstance> instances)
+        {
+            _doorVisualPhase = phase;
+            if (instances == null || instances.Count == 0)
+                return;
+
+            var instanceById = new Dictionary<int, RoomInstance>();
+            for (int i = 0; i < instances.Count; i++)
+                instanceById[instances[i].Id] = instances[i];
+
+            foreach (SpawnedRoomBinding binding in SpawnRoot.GetComponentsInChildren<SpawnedRoomBinding>(true))
+            {
+                if (!instanceById.TryGetValue(binding.RoomInstanceId, out RoomInstance instance))
+                    continue;
+
+                binding.ApplyDoorVisuals(instance, phase);
             }
         }
 
@@ -64,8 +90,12 @@ namespace THPerfection.LevelGen
         public void Spawn(
             in BuildingGenerationResult result,
             in BuildingGenConfig config,
-            RoomCatalog catalog)
+            RoomCatalog catalog,
+            RoomDoorVisualPhase? doorVisualPhase = null)
         {
+            if (doorVisualPhase.HasValue)
+                _doorVisualPhase = doorVisualPhase.Value;
+
             _activeCatalog = catalog;
             ClearSpawned();
 
@@ -78,10 +108,14 @@ namespace THPerfection.LevelGen
         public void SpawnAdditional(
             IReadOnlyList<RoomInstance> instances,
             in BuildingGenConfig config,
-            RoomCatalog catalog)
+            RoomCatalog catalog,
+            RoomDoorVisualPhase? doorVisualPhase = null)
         {
             if (instances == null || instances.Count == 0)
                 return;
+
+            if (doorVisualPhase.HasValue)
+                _doorVisualPhase = doorVisualPhase.Value;
 
             _activeCatalog = catalog;
             SpawnInstances(instances, config, catalog);
@@ -118,36 +152,24 @@ namespace THPerfection.LevelGen
                 instance.Origin, cellSize, floorY);
             roomRoot.transform.rotation = LevelGenWorldTransform.RoomRootRotation(instance.Rotation);
 
+            var binding = roomRoot.AddComponent<SpawnedRoomBinding>();
+            binding.RoomInstanceId = instance.Id;
+
             GameObject prefab = ResolvePrefab(instance.TemplateId);
-            DoorSocketMarker[] doorMarkers = null;
-            LevelGenRoomVisualAuthoring visualAuthoring = null;
 
             if (prefab != null)
             {
                 GameObject art = Instantiate(prefab, roomRoot.transform);
                 art.transform.localPosition = Vector3.zero;
                 art.transform.localRotation = Quaternion.identity;
-                doorMarkers = art.GetComponentsInChildren<DoorSocketMarker>(true);
-                visualAuthoring = art.GetComponentInChildren<LevelGenRoomVisualAuthoring>();
             }
             else if (UseProceduralFallback)
             {
                 BuildProceduralFloor(roomRoot.transform, in template, cellSize);
+                BuildProceduralDoors(roomRoot.transform, instance, cellSize, doorY);
             }
 
-            if (doorMarkers != null && doorMarkers.Length > 0)
-            {
-                foreach (DoorSocketMarker marker in doorMarkers)
-                    marker.ApplyFromInstance(instance);
-            }
-            else if (visualAuthoring != null)
-            {
-                visualAuthoring.ApplyFromInstance(instance);
-            }
-            else
-            {
-                BuildProceduralDoors(SpawnRoot, instance, cellSize, doorY);
-            }
+            binding.ApplyDoorVisuals(instance, _doorVisualPhase);
         }
 
         GameObject ResolvePrefab(string templateId)
@@ -184,7 +206,7 @@ namespace THPerfection.LevelGen
         }
 
         void BuildProceduralDoors(
-            Transform parent,
+            Transform roomRoot,
             RoomInstance instance,
             float cellSize,
             float doorY)
@@ -192,23 +214,20 @@ namespace THPerfection.LevelGen
             foreach (KeyValuePair<DoorEdgeKey, CellDoorState> entry in instance.DoorStates)
             {
                 DoorEdgeKey key = entry.Key;
-                CellDoorState state = entry.Value;
 
                 var door = GameObject.CreatePrimitive(PrimitiveType.Cube);
                 door.name = $"Door_{instance.Id}_{key.Side}_{key.Cell.x}_{key.Cell.y}";
-                door.transform.SetParent(parent, false);
+                door.transform.SetParent(roomRoot, false);
                 door.transform.position = LevelGenWorldTransform.DoorEdgeCenter(
                     key.Cell, key.Side, cellSize, doorY);
                 door.transform.rotation = Quaternion.identity;
                 door.transform.localScale = LevelGenWorldTransform.DoorEdgeSize(key.Side, cellSize);
 
-                Color color = state switch
-                {
-                    CellDoorState.Open      => OpenDoorColor,
-                    CellDoorState.Connected => ConnectedDoorColor,
-                    _                       => ClosedDoorColor,
-                };
-                TintRenderer(door.GetComponent<Renderer>(), color);
+                var visual = door.AddComponent<ProceduralDoorVisual>();
+                visual.WorldCell = key.Cell;
+                visual.Side = key.Side;
+                visual.Floor = key.Floor;
+                visual.ConfigureColors(OpenDoorColor, ConnectedDoorColor, ClosedDoorColor);
             }
         }
 

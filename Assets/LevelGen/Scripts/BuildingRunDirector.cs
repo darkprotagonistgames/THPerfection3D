@@ -34,6 +34,7 @@ namespace THPerfection.LevelGen
         public BuildingRunState RunState => _runState;
         public BuildingGenerationResult LastResult => _lastResult;
         public RoomCatalog LastCatalog => _lastCatalog;
+        public RoomDoorVisualPhase DoorVisualPhase { get; private set; } = RoomDoorVisualPhase.Gameplay;
 
         public event Action<BuildingGenerationResult> RunStarted;
         public event Action<ExpansionResult> RunExpanded;
@@ -64,9 +65,40 @@ namespace THPerfection.LevelGen
             _lastResult = _runState.ToResult(CollectOpenFrontier());
 
             if (SpawnRoomsOnCommit)
-                RoomSpawner.Spawn(_lastResult, Config, _lastCatalog);
+            {
+                RoomSpawner.Spawn(_lastResult, Config, _lastCatalog, RoomDoorVisualPhase.Spawning);
+                EnterGameplayDoorPhase();
+            }
 
             RunStarted?.Invoke(_lastResult);
+        }
+
+        /// <summary>
+        /// Shows frontier (<see cref="CellDoorState.Open"/>) doors open for an expansion/spawn pass.
+        /// Logical door states on <see cref="BuildingRunState"/> are unchanged.
+        /// </summary>
+        public void EnterSpawningDoorPhase()
+        {
+            DoorVisualPhase = RoomDoorVisualPhase.Spawning;
+            RefreshDoorVisuals();
+        }
+
+        /// <summary>
+        /// Closes unconnected frontier doors for active gameplay. Connected passages stay open.
+        /// </summary>
+        public void EnterGameplayDoorPhase()
+        {
+            DoorVisualPhase = RoomDoorVisualPhase.Gameplay;
+            RefreshDoorVisuals();
+        }
+
+        public void RefreshDoorVisuals()
+        {
+            if (_runState == null)
+                return;
+
+            OfficeBuildingGenerator.ReclassifyDoorStates(_runState, _lastCatalog ?? ResolveCatalog());
+            RoomSpawner.ApplyDoorVisualPhase(DoorVisualPhase, _runState.Instances);
         }
 
         public ExpansionResult ExpandRun(uint? expansionSeedOverride = null) =>
@@ -85,6 +117,9 @@ namespace THPerfection.LevelGen
             _lastCatalog = ResolveCatalog();
             uint expansionSeed = expansionSeedOverride ?? RunSeed;
 
+            if (SpawnRoomsOnCommit)
+                EnterSpawningDoorPhase();
+
             ExpansionResult expansion = OfficeBuildingGenerator.ExpandMainFloor(
                 _runState,
                 _lastCatalog,
@@ -93,8 +128,17 @@ namespace THPerfection.LevelGen
 
             _lastResult = expansion.Snapshot;
 
-            if (SpawnRoomsOnCommit && expansion.AddedInstances.Count > 0)
-                RoomSpawner.SpawnAdditional(expansion.AddedInstances, Config, _lastCatalog);
+            if (SpawnRoomsOnCommit)
+            {
+                if (expansion.AddedInstances.Count > 0)
+                    RoomSpawner.SpawnAdditional(
+                        expansion.AddedInstances,
+                        Config,
+                        _lastCatalog,
+                        RoomDoorVisualPhase.Spawning);
+
+                EnterGameplayDoorPhase();
+            }
 
             RunExpanded?.Invoke(expansion);
             return expansion;
@@ -116,7 +160,7 @@ namespace THPerfection.LevelGen
                 return;
             }
 
-            RoomSpawner.Spawn(_lastResult, Config, _lastCatalog ?? ResolveCatalog());
+            RoomSpawner.Spawn(_lastResult, Config, _lastCatalog ?? ResolveCatalog(), DoorVisualPhase);
         }
 
         IReadOnlyList<DoorwaySlot> CollectOpenFrontier()

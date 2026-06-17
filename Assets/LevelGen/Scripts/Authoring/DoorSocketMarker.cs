@@ -17,7 +17,7 @@ namespace THPerfection.LevelGen.Authoring
         public GameObject OpenVisual;
         public GameObject ClosedVisual;
 
-        public void ApplyFromInstance(RoomInstance instance)
+        public void ApplyFromInstance(RoomInstance instance, RoomDoorVisualPhase phase = RoomDoorVisualPhase.Gameplay)
         {
             int2 worldCell = instance.Origin
                 + GridTransforms.RotateCell(LocalCell, instance.Rotation);
@@ -30,8 +30,7 @@ namespace THPerfection.LevelGen.Authoring
                 return;
             }
 
-            bool showOpen = state is CellDoorState.Open or CellDoorState.Connected;
-            SetVisuals(showOpen);
+            SetVisuals(RoomDoorVisualRules.ShouldShowOpen(state, phase));
         }
 
         public void SetVisuals(bool showOpen)

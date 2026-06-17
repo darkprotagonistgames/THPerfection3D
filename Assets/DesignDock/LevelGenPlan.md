@@ -224,7 +224,7 @@ For each room instance, classify every outward socket:
 |-------|---------|
 | `Connected` | Mated with another room this pass |
 | `Closed` | Unused frontier or faces void after budget — **prefab shows closed door / wall** |
-| `Open` | Reserved for future expansion — **not closed visually**; stays on frontier for later passes |
+| `Open` | Reserved for future expansion — **closed visually during gameplay**; shown open again during the next spawn/expansion pass (`BuildingRunDirector.EnterSpawningDoorPhase`) |
 
 Persist `RoomInstance` + `DoorStates` to run state. Spawn prefabs with `RoomInstancePayload`.
 
