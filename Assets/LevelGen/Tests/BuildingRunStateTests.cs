@@ -83,7 +83,7 @@ namespace THPerfection.LevelGen.Tests
 
             Assert.AreEqual(a.RoomsAfter, b.RoomsAfter);
             Assert.AreEqual(a.AddedInstances.Count, b.AddedInstances.Count);
-            Assert.AreEqual(CountCells(a.Snapshot), CountCells(b.Snapshot));
+            Assert.AreEqual(CellCount(a.Snapshot), CellCount(b.Snapshot));
         }
 
         [Test]
