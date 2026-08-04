@@ -3,8 +3,10 @@
     "rootNamespace": "",
     "references": [
         "THPerfection.GeneratedEvents",
+        "THPerfection.LevelGen",
         "Unity.Entities",
         "Unity.Entities.Hybrid",
+        "Unity.Entities.Graphics",
         "Unity.Physics",
         "Unity.Transforms",
         "Unity.Mathematics",

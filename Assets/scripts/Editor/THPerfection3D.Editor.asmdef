@@ -3,6 +3,7 @@
     "rootNamespace": "",
     "references": [
         "THPerfection3D",
+        "THPerfection.LevelGen",
         "Unity.Entities",
         "Unity.Entities.Hybrid",
         "Unity.Collections",
