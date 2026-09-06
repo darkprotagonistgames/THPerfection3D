@@ -19,14 +19,14 @@ public sealed class DoorSocketMarkerBaker : Baker<DoorSocketMarker>
         if (authoring.OpenVisual != null)
         {
             DependsOn(authoring.OpenVisual);
-            openVisual = GetEntity(authoring.OpenVisual, TransformUsageFlags.Dynamic);
+            openVisual = GetEntity(authoring.OpenVisual, VisualTransformUsage);
             AppendOpenHierarchy(authoring.OpenVisual, openEntities);
         }
 
         if (authoring.ClosedVisual != null)
         {
             DependsOn(authoring.ClosedVisual);
-            closedVisual = GetEntity(authoring.ClosedVisual, TransformUsageFlags.Dynamic);
+            closedVisual = GetEntity(authoring.ClosedVisual, VisualTransformUsage);
             AppendClosedHierarchy(authoring.ClosedVisual, closedEntities);
         }
 
@@ -39,12 +39,15 @@ public sealed class DoorSocketMarkerBaker : Baker<DoorSocketMarker>
         });
     }
 
+    const TransformUsageFlags VisualTransformUsage =
+        TransformUsageFlags.Dynamic | TransformUsageFlags.Renderable;
+
     void AppendOpenHierarchy(GameObject root, DynamicBuffer<RoomDoorOpenVisualEntity> buffer)
     {
         if (root == null)
             return;
 
-        buffer.Add(new RoomDoorOpenVisualEntity { Entity = GetEntity(root, TransformUsageFlags.Dynamic) });
+        buffer.Add(new RoomDoorOpenVisualEntity { Entity = GetEntity(root, VisualTransformUsage) });
 
         Transform transform = root.transform;
         for (int i = 0; i < transform.childCount; i++)
@@ -56,7 +59,7 @@ public sealed class DoorSocketMarkerBaker : Baker<DoorSocketMarker>
         if (root == null)
             return;
 
-        buffer.Add(new RoomDoorClosedVisualEntity { Entity = GetEntity(root, TransformUsageFlags.Dynamic) });
+        buffer.Add(new RoomDoorClosedVisualEntity { Entity = GetEntity(root, VisualTransformUsage) });
 
         Transform transform = root.transform;
         for (int i = 0; i < transform.childCount; i++)

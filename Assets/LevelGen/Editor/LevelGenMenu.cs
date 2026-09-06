@@ -194,7 +194,6 @@ namespace THPerfection.LevelGen.Editor
             doorClosed.transform.localScale = Vector3.Scale(
                 doorOpen.transform.localScale,
                 new Vector3(1f, 1.4f, 0.6f));
-            doorClosed.SetActive(false);
 
             marker.OpenVisual = doorOpen;
             marker.ClosedVisual = doorClosed;

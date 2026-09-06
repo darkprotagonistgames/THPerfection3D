@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2ee150d2f93a97541b482d62f5535b96, type: 3}
   m_Name: TestRoom
   m_EditorClassIdentifier: THPerfection.LevelGen::THPerfection.LevelGen.Authoring.RoomTemplateDesign
-  TemplateId: BIG_ROOMM_3_doors
+  TemplateId: wobble
   AllowedFloors: 2
   BaseWeight: 1
   CellSize: 150
@@ -21,123 +21,86 @@ MonoBehaviour:
   Cells:
   - {x: 3, y: 1}
   - {x: 3, y: 2}
-  - {x: 4, y: 2}
-  - {x: 2, y: 2}
-  - {x: 1, y: 4}
-  - {x: 1, y: 3}
-  - {x: 1, y: 2}
-  - {x: 1, y: 1}
-  - {x: 1, y: 0}
-  - {x: 5, y: 0}
-  - {x: 5, y: 1}
-  - {x: 5, y: 2}
-  - {x: 5, y: 3}
-  - {x: 5, y: 4}
-  - {x: 4, y: 4}
-  - {x: 3, y: 4}
-  - {x: 2, y: 4}
-  - {x: 2, y: 3}
-  - {x: 3, y: 3}
-  - {x: 4, y: 3}
   - {x: 2, y: 1}
-  - {x: 2, y: 0}
   - {x: 3, y: 0}
-  - {x: 4, y: 0}
+  - {x: 4, y: 1}
+  - {x: 2, y: 2}
+  - {x: 3, y: 3}
+  - {x: 2, y: 3}
+  - {x: 2, y: 4}
+  - {x: 1, y: 3}
+  - {x: 1, y: 4}
   Edges:
-  - Cell: {x: 3, y: 1}
+  - Cell: {x: 3, y: 2}
     Side: 1
-    Kind: 1
+    Kind: 0
     IsMainDoor: 0
-  - Cell: {x: 4, y: 2}
+  - Cell: {x: 2, y: 1}
     Side: 2
     Kind: 1
     IsMainDoor: 0
-  - Cell: {x: 1, y: 4}
-    Side: 0
-    Kind: 0
-    IsMainDoor: 0
-  - Cell: {x: 1, y: 4}
+  - Cell: {x: 2, y: 1}
     Side: 3
     Kind: 0
     IsMainDoor: 0
-  - Cell: {x: 1, y: 3}
-    Side: 3
-    Kind: 0
-    IsMainDoor: 0
-  - Cell: {x: 1, y: 2}
-    Side: 3
-    Kind: 0
-    IsMainDoor: 0
-  - Cell: {x: 1, y: 1}
-    Side: 3
-    Kind: 1
-    IsMainDoor: 1
-  - Cell: {x: 1, y: 0}
-    Side: 2
-    Kind: 0
-    IsMainDoor: 0
-  - Cell: {x: 1, y: 0}
-    Side: 3
-    Kind: 0
-    IsMainDoor: 0
-  - Cell: {x: 5, y: 0}
+  - Cell: {x: 3, y: 0}
     Side: 1
     Kind: 0
-    IsMainDoor: 0
-  - Cell: {x: 5, y: 0}
-    Side: 2
-    Kind: 0
-    IsMainDoor: 0
-  - Cell: {x: 5, y: 1}
-    Side: 1
-    Kind: 0
-    IsMainDoor: 0
-  - Cell: {x: 5, y: 1}
-    Side: 3
-    Kind: 1
-    IsMainDoor: 0
-  - Cell: {x: 5, y: 2}
-    Side: 1
-    Kind: 0
-    IsMainDoor: 0
-  - Cell: {x: 5, y: 3}
-    Side: 1
-    Kind: 0
-    IsMainDoor: 0
-  - Cell: {x: 5, y: 4}
-    Side: 0
-    Kind: 0
-    IsMainDoor: 0
-  - Cell: {x: 5, y: 4}
-    Side: 1
-    Kind: 1
-    IsMainDoor: 0
-  - Cell: {x: 4, y: 4}
-    Side: 0
-    Kind: 0
-    IsMainDoor: 0
-  - Cell: {x: 3, y: 4}
-    Side: 0
-    Kind: 1
-    IsMainDoor: 0
-  - Cell: {x: 2, y: 4}
-    Side: 0
-    Kind: 0
-    IsMainDoor: 0
-  - Cell: {x: 2, y: 0}
-    Side: 2
-    Kind: 1
     IsMainDoor: 0
   - Cell: {x: 3, y: 0}
     Side: 2
     Kind: 0
     IsMainDoor: 0
-  - Cell: {x: 4, y: 0}
+  - Cell: {x: 3, y: 0}
+    Side: 3
+    Kind: 0
+    IsMainDoor: 0
+  - Cell: {x: 4, y: 1}
     Side: 0
+    Kind: 0
+    IsMainDoor: 0
+  - Cell: {x: 4, y: 1}
+    Side: 1
+    Kind: 0
+    IsMainDoor: 0
+  - Cell: {x: 4, y: 1}
+    Side: 2
+    Kind: 0
+    IsMainDoor: 0
+  - Cell: {x: 2, y: 2}
+    Side: 3
+    Kind: 0
+    IsMainDoor: 0
+  - Cell: {x: 3, y: 3}
+    Side: 0
+    Kind: 0
+    IsMainDoor: 0
+  - Cell: {x: 3, y: 3}
+    Side: 1
     Kind: 1
     IsMainDoor: 0
-  - Cell: {x: 4, y: 0}
+  - Cell: {x: 2, y: 4}
+    Side: 0
+    Kind: 1
+    IsMainDoor: 1
+  - Cell: {x: 2, y: 4}
+    Side: 1
+    Kind: 0
+    IsMainDoor: 0
+  - Cell: {x: 1, y: 3}
     Side: 2
+    Kind: 0
+    IsMainDoor: 0
+  - Cell: {x: 1, y: 3}
+    Side: 3
+    Kind: 1
+    IsMainDoor: 0
+  - Cell: {x: 1, y: 4}
+    Side: 0
+    Kind: 0
+    IsMainDoor: 0
+  - Cell: {x: 1, y: 4}
+    Side: 3
     Kind: 0
     IsMainDoor: 0
   OutputFolder: Assets/LevelGen/RoomPrefabs

@@ -14,7 +14,9 @@ namespace THPerfection.LevelGen.Authoring
         public bool IsMainDoor;
 
         [Header("Runtime door visuals")]
+        [Tooltip("Must stay active on the prefab so ECS baking includes the mesh. Runtime hides via DisableRendering.")]
         public GameObject OpenVisual;
+        [Tooltip("Must stay active on the prefab so ECS baking includes the mesh. Runtime hides via DisableRendering.")]
         public GameObject ClosedVisual;
 
         public void ApplyFromInstance(RoomInstance instance, RoomDoorVisualPhase phase = RoomDoorVisualPhase.Gameplay)

@@ -14,13 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: THPerfection.LevelGen::THPerfection.LevelGen.RoomCatalogAsset
   IncludeBuiltinFallback: 0
   Entries:
-  - RoomPrefab: {fileID: 4952973282109792427, guid: 9cbe21cb384635f4091e208cc91274ea, type: 3}
+  - RoomPrefab: {fileID: 6811647281204386862, guid: 60a769c5c6c28c74b97d789cf174318e, type: 3}
     EvaluatorOverride: {fileID: 0}
-  - RoomPrefab: {fileID: 19615917380616880, guid: 8d516ccbe75d8094fbbd2f9956ff5784, type: 3}
+  - RoomPrefab: {fileID: 110834542360567491, guid: 55fd038de607971458cebfdc0476da10, type: 3}
     EvaluatorOverride: {fileID: 0}
-  - RoomPrefab: {fileID: 7929509244422676669, guid: f234c4dd3a0956841a02ffa3b31c1a8a, type: 3}
-    EvaluatorOverride: {fileID: 0}
-  - RoomPrefab: {fileID: 2859317943552851736, guid: 7b9b5be0b5dc035439c5ee7e0df418c8, type: 3}
-    EvaluatorOverride: {fileID: 0}
-  - RoomPrefab: {fileID: 9099387852108190, guid: 60a769c5c6c28c74b97d789cf174318e, type: 3}
+  - RoomPrefab: {fileID: 780178344995336341, guid: 1eeb8b43677f5774887d4cebf0e84d25, type: 3}
     EvaluatorOverride: {fileID: 0}

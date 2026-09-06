@@ -497,6 +497,10 @@ PrefabInstance:
       value: 200
       objectReference: {fileID: 0}
     - target: {fileID: 1572775477411161328, guid: 86b211583ed1c834a825d397304e37f9, type: 3}
+      propertyPath: m_Enabled
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1572775477411161328, guid: 86b211583ed1c834a825d397304e37f9, type: 3}
       propertyPath: AnchorEulerAngles.x
       value: 90
       objectReference: {fileID: 0}

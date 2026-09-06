@@ -66,8 +66,8 @@ namespace THPerfection.LevelGen.Editor
           {
             GameObject openGo = CreateDoorVisualChild(wallSlot, design.DoorOpenPrefab, "doorOpen", design.InstantiatePlaceholderPrefabs);
             GameObject closedGo = CreateDoorVisualChild(wallSlot, design.DoorClosedPrefab, "doorClosed", design.InstantiatePlaceholderPrefabs);
-            if (closedGo != null)
-              closedGo.SetActive(false);
+            // Keep both active. Inactive doorClosed bakes with Disabled and ECS
+            // Instantiate/DisableRendering cannot show those meshes at runtime.
 
             Transform doorMarker = CreateChild(doorsRoot, $"Door_{side}_{cell.x}_{cell.y}");
             doorMarker.localPosition = Vector3.zero;

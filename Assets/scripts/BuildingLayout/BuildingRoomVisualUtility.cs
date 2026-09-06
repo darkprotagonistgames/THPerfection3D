@@ -312,8 +312,19 @@ public static class BuildingRoomVisualUtility
         if (entity == Entity.Null || !entityManager.Exists(entity))
             return;
 
+        // Prefab-tagged refs were not remapped on Instantiate (typical when the
+        // authoring GameObject was inactive and omitted from LinkedEntityGroup).
+        if (entityManager.HasComponent<Prefab>(entity))
+            return;
+
         if (enabled)
         {
+            // Inactive doorClosed GameObjects bake with Disabled. DisableRendering
+            // cannot make those entities visible — strip Disabled per entity.
+            // Do not use SetEnabled: it walks LinkedEntityGroup and can hide the room.
+            if (entityManager.HasComponent<Disabled>(entity))
+                entityManager.RemoveComponent<Disabled>(entity);
+
             if (entityManager.HasComponent<DisableRendering>(entity))
                 entityManager.RemoveComponent<DisableRendering>(entity);
         }
