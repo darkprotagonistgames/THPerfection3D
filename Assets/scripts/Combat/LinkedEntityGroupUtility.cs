@@ -38,7 +38,6 @@ public static class LinkedEntityGroupUtility
         Entity anchor = EnsureSpawnAnchor(entityManager, groupRoot);
 
         Entity instance = entityManager.Instantiate(prefab);
-        CopySceneInfo(entityManager, groupRoot, instance);
         entityManager.SetComponentData(instance, transform);
         AddChild(entityManager, anchor, instance);
 

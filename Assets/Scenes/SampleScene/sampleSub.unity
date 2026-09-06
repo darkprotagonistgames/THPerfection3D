@@ -292,6 +292,10 @@ MonoBehaviour:
   - WeaponSystemPrefab: {fileID: 1577290163218352791, guid: 0f12913b672816b4e938f541051687ab, type: 3}
   - WeaponSystemPrefab: {fileID: 1577290163218352791, guid: f2268a9049cb1bd4fa733167edd07aa3, type: 3}
   - WeaponSystemPrefab: {fileID: 1577290163218352791, guid: f2268a9049cb1bd4fa733167edd07aa3, type: 3}
+  - WeaponSystemPrefab: {fileID: 1577290163218352791, guid: f2268a9049cb1bd4fa733167edd07aa3, type: 3}
+  - WeaponSystemPrefab: {fileID: 1577290163218352791, guid: f2268a9049cb1bd4fa733167edd07aa3, type: 3}
+  - WeaponSystemPrefab: {fileID: 1577290163218352791, guid: 0f12913b672816b4e938f541051687ab, type: 3}
+  - WeaponSystemPrefab: {fileID: 1577290163218352791, guid: 0f12913b672816b4e938f541051687ab, type: 3}
 --- !u!4 &936851136
 Transform:
   m_ObjectHideFlags: 0
