@@ -119,6 +119,51 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
+--- !u!1 &53090609
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 53090612}
+  - component: {fileID: 53090614}
+  m_Layer: 0
+  m_Name: RoomCatalogRegistry
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &53090612
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 53090609}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &53090614
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 53090609}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7c4e8a2b1f9034d4a9e6b5c3d2a1f0e9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: THPerfection3D::RoomCatalogEcsAuthoring
+  CatalogAsset: {fileID: 11400000, guid: 9929ddcc5443e6c4d9c51961dbe50358, type: 2}
 --- !u!1 &603575829
 GameObject:
   m_ObjectHideFlags: 0
@@ -243,6 +288,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: THPerfection3D::PlayerWeaponCatalogAuthoring
   Slots:
+  - WeaponSystemPrefab: {fileID: 1577290163218352791, guid: 0f12913b672816b4e938f541051687ab, type: 3}
+  - WeaponSystemPrefab: {fileID: 1577290163218352791, guid: 0f12913b672816b4e938f541051687ab, type: 3}
+  - WeaponSystemPrefab: {fileID: 1577290163218352791, guid: f2268a9049cb1bd4fa733167edd07aa3, type: 3}
+  - WeaponSystemPrefab: {fileID: 1577290163218352791, guid: f2268a9049cb1bd4fa733167edd07aa3, type: 3}
   - WeaponSystemPrefab: {fileID: 1577290163218352791, guid: f2268a9049cb1bd4fa733167edd07aa3, type: 3}
   - WeaponSystemPrefab: {fileID: 1577290163218352791, guid: f2268a9049cb1bd4fa733167edd07aa3, type: 3}
   - WeaponSystemPrefab: {fileID: 1577290163218352791, guid: 0f12913b672816b4e938f541051687ab, type: 3}
@@ -452,6 +501,10 @@ PrefabInstance:
       value: 200
       objectReference: {fileID: 0}
     - target: {fileID: 1572775477411161328, guid: 86b211583ed1c834a825d397304e37f9, type: 3}
+      propertyPath: m_Enabled
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1572775477411161328, guid: 86b211583ed1c834a825d397304e37f9, type: 3}
       propertyPath: AnchorEulerAngles.x
       value: 90
       objectReference: {fileID: 0}
@@ -514,3 +567,4 @@ SceneRoots:
   - {fileID: 1521495406}
   - {fileID: 603575831}
   - {fileID: 936851136}
+  - {fileID: 53090612}

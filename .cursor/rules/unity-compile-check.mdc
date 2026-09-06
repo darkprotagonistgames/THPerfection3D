@@ -1,0 +1,47 @@
+---
+description: After C# edits, verify Unity compilation via Editor.log
+alwaysApply: true
+---
+
+# Unity compile verification
+
+After changing C# under `Assets/` (especially `Assets/LevelGen/`, `Assets/scripts/`), **verify the project compiles** before ending the task.
+
+## When to run
+
+- After implementing or fixing C# scripts, asmdefs, or editor tools
+- After the user reports compile errors
+- Before saying work is complete on a coding task
+
+## How to check (Windows)
+
+1. Prefer Unity already open and reimported. Then read the latest compiler errors from the Editor log:
+
+```powershell
+Select-String -Path "$env:LOCALAPPDATA\Unity\Editor\Editor.log" -Pattern "error CS" | Select-Object -Last 20
+```
+
+2. If no `error CS` lines appear in the last ~30 log matches, treat compile as clean for script errors.
+
+3. If errors remain, fix them and re-check until clean (or report blockers).
+
+## Optional: force a script compile
+
+If Unity is running with this project open, touching a script triggers recompile:
+
+```powershell
+(Get-Item "Assets/LevelGen/Scripts/Authoring/RoomTemplateDesign.cs").LastWriteTime = Get-Date
+Start-Sleep -Seconds 8
+Select-String -Path "$env:LOCALAPPDATA\Unity\Editor\Editor.log" -Pattern "error CS" | Select-Object -Last 20
+```
+
+Adjust the touched file to one you changed. Do not batch-touch unrelated files.
+
+## Do not
+
+- Mark C# work complete without checking for `error CS` when Unity log is available
+- Ignore errors in `Assets/LevelGen/` or `Assets/scripts/` after edits you made
+
+## Unity MCP
+
+If using `user-unity-mcp` to refresh or query compile state, still follow the sequential MCP rule (one call per turn).

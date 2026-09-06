@@ -88,6 +88,7 @@ public static class LinkedEntityGroupUtility
         }
 
         Entity anchor = entityManager.CreateEntity();
+        CopySceneInfo(entityManager, groupRoot, anchor);
         entityManager.AddComponent<SpawnGroupAnchorTag>(anchor);
         entityManager.AddComponentData(anchor, LocalTransform.Identity);
         AddChild(entityManager, groupRoot, anchor);
@@ -102,6 +103,21 @@ public static class LinkedEntityGroupUtility
         }
 
         return anchor;
+    }
+
+    static void CopySceneInfo(in EntityManager entityManager, Entity source, Entity target)
+    {
+        if (entityManager.HasComponent<SceneSection>(source))
+        {
+            var section = entityManager.GetSharedComponent<SceneSection>(source);
+            entityManager.AddSharedComponent(target, section);
+        }
+
+        if (entityManager.HasComponent<SceneTag>(source))
+        {
+            var tag = entityManager.GetSharedComponent<SceneTag>(source);
+            entityManager.AddSharedComponent(target, tag);
+        }
     }
 
     static void AddChild(in EntityManager entityManager, Entity parent, Entity child)
