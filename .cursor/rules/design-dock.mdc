@@ -12,6 +12,7 @@ Before designing or implementing **gameplay loops**, **rounds**, **omens**, **ev
 | Doc | Use |
 |-----|-----|
 | [GameDesign.md](Assets/DesignDock/GameDesign.md) | Round-based top-down bullet hell, roguelike rounds, omens, events, persistent active map, ECS rationale |
+| [EcsCatalog.md](Assets/DesignDock/EcsCatalog.md) | Custom ECS components and systems currently in `Assets/` |
 | [LevelGenPlan.md](Assets/DesignDock/LevelGenPlan.md) | Procedural building; **BuildingRunDirector**; per-room evaluator SOs; ECS after spawn |
 | [FactionPaletteRules.md](Assets/DesignDock/FactionPaletteRules.md) | Faction and blood color rules |
 | [README.md](Assets/DesignDock/README.md) | Palette files, hex table, MagicaVoxel paths |
