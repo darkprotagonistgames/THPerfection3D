@@ -1,5 +1,7 @@
 # Spatial occupancy plan — grid cell and room tracking
 
+**Status (implemented slice):** Phases B/C are shipped under `Assets/scripts/Spatial/` — opt-in `TracksSpatialOccupancy`, cached `GridCellLocation` / `RoomLocation`, enableable `GridCellChanged` / `RoomChanged`, update + cleanup systems, frame events `roomChangedEvent` / `playerRoomChangedEvent`, and `RoomIdDebugOverlay`. Layout bridge (Phase A) lives in `Assets/scripts/BuildingLayout/`. Camera consumer (Phase D) is not implemented yet.
+
 Follow-up work after **level generator beta** (LevelGen Phases 1–4 in [LevelGenPlan.md](LevelGenPlan.md)). Runtime ECS tracks **which grid cell** and **which room** each opted-in entity occupies, derived from `LocalTransform` and building layout data. When either value changes, consumers are notified via **`IEnableableComponent` change tags**.
 
 Related: [GameDesign.md](GameDesign.md) (persistent run world), [LevelGenPlan.md](LevelGenPlan.md) (grid model, `OccupiedCell`, room instances).

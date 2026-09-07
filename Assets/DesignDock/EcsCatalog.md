@@ -76,6 +76,16 @@ When you add, rename, or remove a custom `IComponentData`, buffer, or system, up
 | `RoomDoorOpenVisualEntity` | buffer | Extra open-door visual entities on a socket. |
 | `RoomDoorClosedVisualEntity` | buffer | Extra closed-door visual entities on a socket. |
 
+### Spatial occupancy
+
+| Type | Kind | What it does |
+|------|------|----------------|
+| `TracksSpatialOccupancy` | tag | Opt-in: entity participates in cell/room tracking. |
+| `GridCellLocation` | data | Cached `FloorId` + grid `int2` from transform. |
+| `RoomLocation` | data | Cached `RoomInstanceId` (`0` = outside stamped cells). |
+| `GridCellChanged` | enableable | Enabled one frame when cell changes (previous/current). |
+| `RoomChanged` | enableable | Enabled one frame when room changes (previous/current). |
+
 ### Spawning and lifetime
 
 | Type | Kind | What it does |
@@ -94,6 +104,8 @@ Do not edit the generated file by hand; change the ECS Event System config and r
 | `jumpEvent` | frame event | Jump from a sender (`high`). |
 | `damageEvent` | frame event | Damage to a victim (amount, weapon, targetable type). |
 | `deathEvent` | frame event | Death of `Sender`. |
+| `roomChangedEvent` | frame event | Any tracked entity changed rooms (`previousRoomId`, `currentRoomId`). |
+| `playerRoomChangedEvent` | frame event | Player (`PlayerMovementData`) changed rooms. |
 | `weponbatTag` | tag | Added on damage events with `wepon.bat`. |
 | `targetablewallTag` / `targetablezombiTag` / `targetableplayerTag` | tags | Added on damage events from `targetable`. |
 
@@ -137,6 +149,13 @@ Do not edit the generated file by hand; change the ECS Event System config and r
 | `RoomDoorVisualBakingSystem` | baking (`PostBakingSystemGroup`) | Strips `Disabled` from baked door visuals so runtime can show them. |
 | `BuildingLayoutChangedCleanupSystem` | simulation, last | Disables `BuildingLayoutChanged` after consumers have seen it. |
 
+### Spatial occupancy
+
+| System | Group / notes | What it does |
+|--------|---------------|----------------|
+| `SpatialOccupancyUpdateSystem` | after transforms, before event enable | Resolves cell/room from layout blob; enables change tags; emits room events. |
+| `SpatialOccupancyCleanupSystem` | simulation, last | Disables `GridCellChanged` / `RoomChanged` after consumers. |
+
 ### Camera, spawn, radar, TTL, events
 
 | System | Group / notes | What it does |
@@ -159,4 +178,5 @@ Do not edit the generated file by hand; change the ECS Event System config and r
 - **`EcsSpawnBridge`** (MonoBehaviour) consumes `SpawnRequest` and instantiates registered prefabs.
 - **`PlayerInventoryManager`** (MonoBehaviour) reads the weapon catalog and spawns the active weapon entity.
 - **`BuildingLayoutEcsBridge`** (MonoBehaviour on `BuildingRunDirector`) commits `BuildingRunState` into the layout singleton and room entities.
+- **`RoomIdDebugOverlay`** (MonoBehaviour) optionally draws room instance ids at each layout cell center in the Game view (`drawRoomIds`).
 - **`MoveToStats` / `SpawnConfigBlob` / `BuildingLayoutBlob`** are blob payloads referenced by components, not `IComponentData`.

@@ -20,3 +20,7 @@ MonoBehaviour:
     EvaluatorOverride: {fileID: 0}
   - RoomPrefab: {fileID: 780178344995336341, guid: 1eeb8b43677f5774887d4cebf0e84d25, type: 3}
     EvaluatorOverride: {fileID: 0}
+  - RoomPrefab: {fileID: 3726740492669597288, guid: ca935553b3e3c6846be1bbdb14f36c85, type: 3}
+    EvaluatorOverride: {fileID: 0}
+  - RoomPrefab: {fileID: 2873996882905042964, guid: 97207e545aa67834f895d65bbe3f817d, type: 3}
+    EvaluatorOverride: {fileID: 0}

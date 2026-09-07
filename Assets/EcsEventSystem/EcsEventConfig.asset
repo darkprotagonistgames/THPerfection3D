@@ -51,3 +51,21 @@ MonoBehaviour:
   - EventName: death
     Namespace: THPerfection.GeneratedEvents
     Parameters: []
+  - EventName: roomChanged
+    Namespace: THPerfection.GeneratedEvents
+    Parameters:
+    - Name: previousRoomId
+      Kind: 2
+      EnumDefinitionName: 
+    - Name: currentRoomId
+      Kind: 2
+      EnumDefinitionName: 
+  - EventName: playerRoomChanged
+    Namespace: THPerfection.GeneratedEvents
+    Parameters:
+    - Name: previousRoomId
+      Kind: 2
+      EnumDefinitionName: 
+    - Name: currentRoomId
+      Kind: 2
+      EnumDefinitionName: 
