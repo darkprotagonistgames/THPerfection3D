@@ -50,8 +50,8 @@ When you add, rename, or remove a custom `IComponentData`, buffer, or system, up
 
 | Type | Kind | What it does |
 |------|------|----------------|
-| `CameraAnchor` | tag | Fixed camera pose for a world region. |
-| `CameraAnchorGridConfig` | singleton | Grid spawn settings (FOV, aspect, world size, overlap). |
+| `CameraAnchor` | enableable tag | Fixed camera pose; room anchors enabled only while the player is in that room. |
+| `RoomCameraAnchor` | data | Per-instance room id stamped at spawn (`0` at bake). |
 | `MainEntityCamera` | tag | Baked on the camera-rig/config entity; follow system mirrors the smoothed pose onto it when present. |
 | `WorldSurfaceBounds` | singleton | Playable XZ plane width/depth from origin. |
 | `HeatSignatureData` | data | Radar heat type, amount, and scatter size. |
@@ -162,8 +162,8 @@ Do not edit the generated file by hand; change the ECS Event System config and r
 |--------|---------------|----------------|
 | `PrefabSpawnerSystem` | initialization | Instantiates authored prefabs at positions, then disables itself. |
 | `SafeRandomSpawnerSystem` | simulation, first | Random XZ spawns avoiding spawn-protection spheres. |
-| `CameraAnchorSpawnSystem` | simulation, first | Builds the camera-anchor grid from config (once). |
-| `CameraAnchorFollowSystem` | after Rukhanka, before transforms | Moves the GameObject camera toward the nearest anchor. |
+| `PlayerRoomCameraAnchorSystem` | after event enable, before cleanup | Enables room `CameraAnchor`s matching `playerRoomChangedEvent` room id. |
+| `CameraAnchorFollowSystem` | after Rukhanka, before transforms | Moves the GameObject camera toward the nearest enabled room anchor. |
 | `RadarRendererSystem` | `SystemBase` | Paints a heatmap texture from `HeatSignatureData`. |
 | `TtlSystem` | simulation | Counts down `TtlData` and destroys expired entities. |
 | `EnableAllEcsEventsSystem` | generated | Sets `Enabled` on new frame-event entities. |
@@ -178,5 +178,6 @@ Do not edit the generated file by hand; change the ECS Event System config and r
 - **`EcsSpawnBridge`** (MonoBehaviour) consumes `SpawnRequest` and instantiates registered prefabs.
 - **`PlayerInventoryManager`** (MonoBehaviour) reads the weapon catalog and spawns the active weapon entity.
 - **`BuildingLayoutEcsBridge`** (MonoBehaviour on `BuildingRunDirector`) commits `BuildingRunState` into the layout singleton and room entities.
+- **`CameraAnchorAuthoring`** (on room prefab children) bakes disabled room camera anchors; instance id stamped at spawn.
 - **`RoomIdDebugOverlay`** (MonoBehaviour) optionally draws room instance ids at each layout cell center in the Game view (`drawRoomIds`).
 - **`MoveToStats` / `SpawnConfigBlob` / `BuildingLayoutBlob`** are blob payloads referenced by components, not `IComponentData`.

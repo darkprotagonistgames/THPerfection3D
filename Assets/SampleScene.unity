@@ -179,7 +179,7 @@ Camera:
     width: 1
     height: 1
   near clip plane: 0.3
-  far clip plane: 1000
+  far clip plane: 200000
   field of view: 60
   orthographic: 0
   orthographic size: 5
@@ -355,6 +355,94 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &881234501
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 881234502}
+  - component: {fileID: 881234503}
+  - component: {fileID: 881234504}
+  - component: {fileID: 881234505}
+  m_Layer: 0
+  m_Name: BuildingRunDirector
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &881234502
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 881234501}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &881234503
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 881234501}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a4b7d0e56f2c414db9a3c6b5d8f1a074, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: THPerfection.LevelGen::THPerfection.LevelGen.BuildingRunDirector
+  CatalogAsset: {fileID: 11400000, guid: 9929ddcc5443e6c4d9c51961dbe50358, type: 2}
+  Config:
+    Seed: 1
+    TargetRoomCount: 12
+    AdditionalRoomsOnExpand: 8
+    MaxAttemptsPerDoorway: 8
+    MinOpenDoorwaysBeforeDeadEnd: 2
+    MinPlacedRoomsBeforeDeadEnd: 3
+    SeedOrigin:
+      x: 0
+      y: 0
+    CellSize: 150
+    FloorY: 0
+  RunSeed: 1
+  SpawnRoomsOnCommit: 0
+  _roomSpawner: {fileID: 0}
+--- !u!114 &881234504
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 881234501}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fb2bc301d41c5b841b6f0e48f7a55a56, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: THPerfection3D::BuildingLayoutEcsBridge
+--- !u!114 &881234505
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 881234501}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c3d4e5f6a7b8094a1b2c3d4e5f607182, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: THPerfection3D::BuildingRunAutoStart
+  AutoStartOnPlay: 1
+  MaxWaitFrames: 120
 --- !u!1 &902263794
 GameObject:
   m_ObjectHideFlags: 0
@@ -700,94 +788,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &881234501
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 881234502}
-  - component: {fileID: 881234503}
-  - component: {fileID: 881234504}
-  - component: {fileID: 881234505}
-  m_Layer: 0
-  m_Name: BuildingRunDirector
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &881234502
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 881234501}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &881234503
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 881234501}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a4b7d0e56f2c414db9a3c6b5d8f1a074, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: THPerfection.LevelGen::THPerfection.LevelGen.BuildingRunDirector
-  CatalogAsset: {fileID: 11400000, guid: 9929ddcc5443e6c4d9c51961dbe50358, type: 2}
-  Config:
-    Seed: 1
-    TargetRoomCount: 12
-    AdditionalRoomsOnExpand: 8
-    MaxAttemptsPerDoorway: 8
-    MinOpenDoorwaysBeforeDeadEnd: 2
-    MinPlacedRoomsBeforeDeadEnd: 3
-    SeedOrigin:
-      x: 0
-      y: 0
-    CellSize: 150
-    FloorY: 0
-  RunSeed: 1
-  SpawnRoomsOnCommit: 0
-  _roomSpawner: {fileID: 0}
---- !u!114 &881234504
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 881234501}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fb2bc301d41c5b841b6f0e48f7a55a56, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: THPerfection3D::BuildingLayoutEcsBridge
---- !u!114 &881234505
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 881234501}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c3d4e5f6a7b8094a1b2c3d4e5f607182, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: THPerfection3D::BuildingRunAutoStart
-  AutoStartOnPlay: 1
-  MaxWaitFrames: 120
 --- !u!1 &9100000001
 GameObject:
   m_ObjectHideFlags: 0
@@ -832,7 +832,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f5228369e44d49349930dc73bf36be4b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: THPerfection3D::RoomIdDebugOverlay
-  drawRoomIds: 0
+  drawRoomIds: 1
+  labelHeightOffset: 2
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

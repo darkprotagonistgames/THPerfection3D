@@ -1,60 +1,30 @@
-using Unity.Burst;
-
 using Unity.Collections;
-
 using Unity.Entities;
-
 using Unity.Mathematics;
-
 using Unity.Transforms;
 
-
-
 /// <summary>
-
 /// When an entity's cone-attack cooldown has elapsed, scans hurtboxes on matching physics layers in
-
 /// range and forward cone; on the first match, instantiates <see cref="ConeAttackData.ConeAttackPrefab"/>
-
 /// at the spawner's <see cref="LocalTransform"/> with no ongoing link to the spawner.
-
 /// </summary>
-
-[BurstCompile]
-
 [UpdateInGroup(typeof(SimulationSystemGroup))]
-
 [UpdateAfter(typeof(TransformSystemGroup))]
-
 public partial struct ConeAttackSystem : ISystem
-
 {
-
     private EntityQuery _hurtboxTargetQuery;
 
     private struct PendingSpawn
-
     {
-
         public Entity Prefab;
-
         public LocalTransform Transform;
-
         public Entity GroupOwner;
-
     }
 
-
-
-    [BurstCompile]
-
     public void OnCreate(ref SystemState state)
-
     {
-
         _hurtboxTargetQuery = CombatAttackTargeting.CreateHurtboxTargetQuery(ref state);
         state.RequireForUpdate<ConeAttackData>();
-
     }
 
 
