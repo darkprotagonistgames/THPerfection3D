@@ -44,4 +44,4 @@ Adjust the touched file to one you changed. Do not batch-touch unrelated files.
 
 ## Unity MCP
 
-If using `user-unity-mcp` to refresh or query compile state, still follow the sequential MCP rule (one call per turn).
+`user-unity-mcp` may be used with other tools in the same turn. After C# edits, still confirm compile via Editor.log as above (MCP refresh is optional, not a substitute).

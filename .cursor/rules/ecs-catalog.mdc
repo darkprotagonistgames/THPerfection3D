@@ -1,0 +1,16 @@
+---
+description: Keep DesignDock/EcsCatalog.md in sync with custom ECS types
+globs: Assets/scripts/**/*.cs, Assets/EcsEventSystem/**/*.cs
+alwaysApply: false
+---
+
+# ECS catalog
+
+When you add, rename, remove, or change the purpose of a **custom** `IComponentData`, `IBufferElementData`, `ISystem`, or `SystemBase` under `Assets/` (not packages):
+
+1. Update [Assets/DesignDock/EcsCatalog.md](Assets/DesignDock/EcsCatalog.md) in the **same change**.
+2. Keep entries brief: type name, kind (tag / data / buffer / system), one-line behavior.
+3. Put generated frame events in the generated section; do not hand-edit `EcsEvents.generated.cs`.
+4. Do not catalog Rukhanka, Unity Physics, or other package types.
+
+Example: adding `FooTag` on enemies → add a row under the matching component table, and a system row if you also add `FooSystem`.
