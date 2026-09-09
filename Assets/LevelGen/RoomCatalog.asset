@@ -14,13 +14,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: THPerfection.LevelGen::THPerfection.LevelGen.RoomCatalogAsset
   IncludeBuiltinFallback: 0
   Entries:
-  - RoomPrefab: {fileID: 6811647281204386862, guid: 60a769c5c6c28c74b97d789cf174318e, type: 3}
+  - RoomPrefab: {fileID: 4588221880597146376, guid: fc13d9ba57f49fa49a346c9daa3fc6e5, type: 3}
     EvaluatorOverride: {fileID: 0}
-  - RoomPrefab: {fileID: 110834542360567491, guid: 55fd038de607971458cebfdc0476da10, type: 3}
+  - RoomPrefab: {fileID: 1346235036990520212, guid: fed7251a0c2ee5441a9a826e0b1a43fc, type: 3}
     EvaluatorOverride: {fileID: 0}
-  - RoomPrefab: {fileID: 780178344995336341, guid: 1eeb8b43677f5774887d4cebf0e84d25, type: 3}
+  - RoomPrefab: {fileID: 3207879895315313980, guid: 9e02a20d1e1419b46bc27f7226b54379, type: 3}
     EvaluatorOverride: {fileID: 0}
-  - RoomPrefab: {fileID: 3726740492669597288, guid: ca935553b3e3c6846be1bbdb14f36c85, type: 3}
+  - RoomPrefab: {fileID: 8191332165819830718, guid: 93877fbfbf2e728408a00c6a8d1f1412, type: 3}
     EvaluatorOverride: {fileID: 0}
-  - RoomPrefab: {fileID: 2873996882905042964, guid: 97207e545aa67834f895d65bbe3f817d, type: 3}
+  - RoomPrefab: {fileID: 8957382788417091544, guid: 965891bfd5683c74b8d99bbb4aade835, type: 3}
     EvaluatorOverride: {fileID: 0}

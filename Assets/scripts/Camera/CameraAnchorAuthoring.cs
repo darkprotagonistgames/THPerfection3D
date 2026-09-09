@@ -1,3 +1,4 @@
+using THPerfection.LevelGen;
 using Unity.Entities;
 using Unity.Mathematics;
 using UnityEngine;
@@ -6,12 +7,13 @@ using UnityEngine;
 /// Place on a child GameObject inside a room prefab to bake a room-scoped camera anchor.
 /// Keep this GameObject active so it joins <c>LinkedEntityGroup</c>.
 /// Position follows the room; rotation is treated as world-north at bake and stays world-aligned
-/// when the room instance is rotated.
+/// when the room instance is rotated. Duplicate this object to add extra room cameras.
 /// </summary>
+[AddComponentMenu("TH Perfection/Camera/Camera Anchor")]
 [DisallowMultipleComponent]
 public class CameraAnchorAuthoring : MonoBehaviour
 {
-    [Tooltip("Gizmo frustum length for placement preview.")]
+    [Tooltip("Gizmo frustum length for placement preview (look distance to ground).")]
     public float GizmoFrustumLength = 40f;
 
     class Baker : Baker<CameraAnchorAuthoring>
@@ -37,15 +39,15 @@ public class CameraAnchorAuthoring : MonoBehaviour
     {
         Transform t = transform;
         Vector3 origin = t.position;
-        // Preview as world-north intent (ignore parent room yaw in the editor when possible).
         Quaternion rotation = t.rotation;
         float length = Mathf.Max(1f, GizmoFrustumLength);
-        float halfH = length * 0.35f;
-        float halfV = length * 0.25f;
+        // Center-square gameplay viewport: usable FOV is vertical FOV on both axes.
+        float half = length * Mathf.Tan(
+            0.5f * RoomCameraAnchorPose.VerticalFieldOfViewDegrees * Mathf.Deg2Rad);
 
         Vector3 forward = rotation * Vector3.forward * length;
-        Vector3 right = rotation * Vector3.right * halfH;
-        Vector3 up = rotation * Vector3.up * halfV;
+        Vector3 right = rotation * Vector3.right * half;
+        Vector3 up = rotation * Vector3.up * half;
         Vector3 tip = origin + forward;
 
         Gizmos.color = Color.cyan;
@@ -58,5 +60,13 @@ public class CameraAnchorAuthoring : MonoBehaviour
         Gizmos.DrawLine(tip - right - up, tip - right + up);
         Gizmos.DrawLine(tip - right + up, tip + right + up);
         Gizmos.DrawWireSphere(origin, 2f);
+
+        Vector3 lookDir = rotation * Vector3.forward;
+        if (Mathf.Abs(lookDir.y) > 0.01f)
+        {
+            float tHit = -origin.y / lookDir.y;
+            if (tHit > 0f)
+                Gizmos.DrawWireSphere(origin + lookDir * tHit, 4f);
+        }
     }
 }
