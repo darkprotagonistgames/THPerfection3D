@@ -3,6 +3,7 @@
     "rootNamespace": "THPerfection.LevelGen.Editor",
     "references": [
         "THPerfection.LevelGen",
+        "THPerfection3D",
         "Unity.Mathematics"
     ],
     "includePlatforms": [

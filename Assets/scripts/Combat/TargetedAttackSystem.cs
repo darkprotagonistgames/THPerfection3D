@@ -1,4 +1,3 @@
-using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
@@ -9,7 +8,6 @@ using Unity.Transforms;
 /// layers within range and instantiates <see cref="TargetedAttackData.AttackPrefab"/> at the spawner's
 /// <see cref="LocalTransform"/> with <see cref="AttackSpawnContext"/> origin and target set.
 /// </summary>
-[BurstCompile]
 [UpdateInGroup(typeof(SimulationSystemGroup))]
 [UpdateAfter(typeof(TransformSystemGroup))]
 public partial struct TargetedAttackSystem : ISystem
@@ -25,7 +23,6 @@ public partial struct TargetedAttackSystem : ISystem
         public Entity TargetEntity;
     }
 
-    [BurstCompile]
     public void OnCreate(ref SystemState state)
     {
         _hurtboxTargetQuery = CombatAttackTargeting.CreateHurtboxTargetQuery(ref state);

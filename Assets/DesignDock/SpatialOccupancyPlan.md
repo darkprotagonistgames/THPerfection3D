@@ -1,5 +1,7 @@
 # Spatial occupancy plan — grid cell and room tracking
 
+**Status (implemented slice):** Phases B/C are shipped under `Assets/scripts/Spatial/` — opt-in `TracksSpatialOccupancy`, cached `GridCellLocation` / `RoomLocation`, enableable `GridCellChanged` / `RoomChanged`, update + cleanup systems, frame events `roomChangedEvent` / `playerRoomChangedEvent`, and `RoomIdDebugOverlay`. Layout bridge (Phase A) lives in `Assets/scripts/BuildingLayout/`. Phase D room camera: `CameraAnchorAuthoring` on room prefabs, `RoomCameraAnchor` instance stamp, `PlayerRoomCameraAnchorSystem` + follow of enabled anchors only (world grid spawner removed).
+
 Follow-up work after **level generator beta** (LevelGen Phases 1–4 in [LevelGenPlan.md](LevelGenPlan.md)). Runtime ECS tracks **which grid cell** and **which room** each opted-in entity occupies, derived from `LocalTransform` and building layout data. When either value changes, consumers are notified via **`IEnableableComponent` change tags**.
 
 Related: [GameDesign.md](GameDesign.md) (persistent run world), [LevelGenPlan.md](LevelGenPlan.md) (grid model, `OccupiedCell`, room instances).
@@ -45,7 +47,7 @@ Reuse level-gen conventions — do not invent a second grid:
 | Cell | `int2` where `cell.x → world X`, `cell.y → world Z` |
 | Cell size | From run config (default `4.0` m, `BuildingGenConfig.CellSize`) |
 | World from cell center | `TopDownPlane.ToPosition((float2)cell * cellSize, floorY)` |
-| Cell from world position | `int2(math.floor(pos.x / cellSize), math.floor(pos.z / cellSize))` |
+| Cell from world position | `int2(floor(pos.x / cellSize + 0.5), floor(pos.z / cellSize + 0.5))` — nearest center-pivoted cell (`cell * CellSize`) |
 | Floor | `FloorId` — beta uses **Main only**; resolve floor from Y or an explicit `FloorMembership` component when multi-floor ships |
 | Room | `OccupiedCell.RoomInstanceId` from layout blob at `(floor, cell)`; `0` = outside building / unmapped |
 

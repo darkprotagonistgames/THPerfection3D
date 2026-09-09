@@ -3,12 +3,17 @@ using Unity.Mathematics;
 
 public static class BuildingLayoutLookup
 {
+    /// <summary>
+    /// Maps world XZ to a grid cell. Cells are <b>center-pivoted</b> at <c>cell * cellSize</c>
+    /// (matching room art / <see cref="THPerfection.LevelGen.LevelGenWorldTransform.CellCenter"/>),
+    /// so membership uses round-to-nearest rather than floor of the min corner.
+    /// </summary>
     public static int2 WorldToCell(float2 worldXZ, float cellSize)
     {
         float inv = 1f / math.max(0.01f, cellSize);
         return new int2(
-            (int)math.floor(worldXZ.x * inv),
-            (int)math.floor(worldXZ.y * inv));
+            (int)math.floor(worldXZ.x * inv + 0.5f),
+            (int)math.floor(worldXZ.y * inv + 0.5f));
     }
 
     public static bool TryGetCell(

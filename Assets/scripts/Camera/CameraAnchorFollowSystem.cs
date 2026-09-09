@@ -5,11 +5,12 @@ using Unity.Transforms;
 using UnityEngine;
 
 /// <summary>
-/// Smoothly moves the Unity Camera toward the nearest anchor after animation has updated entity transforms.
-/// Must not read <see cref="LocalTransform"/> from MonoBehaviour LateUpdate while Rukhanka jobs are running.
+/// Smoothly moves the Unity Camera toward the nearest <b>enabled</b> room camera anchor
+/// using world space (<see cref="LocalToWorld"/>), so child anchors inherit the room root pose.
+/// Runs after transforms so hierarchy world matrices are current.
 /// </summary>
 [UpdateAfter(typeof(RukhankaAnimationSystemGroup))]
-[UpdateBefore(typeof(TransformSystemGroup))]
+[UpdateAfter(typeof(TransformSystemGroup))]
 [WorldSystemFilter(WorldSystemFilterFlags.LocalSimulation | WorldSystemFilterFlags.ClientSimulation)]
 public partial class CameraAnchorFollowSystem : SystemBase
 {
@@ -25,22 +26,27 @@ public partial class CameraAnchorFollowSystem : SystemBase
         if (unityCamera == null)
             return;
 
+        Entity playerEntity = SystemAPI.GetSingletonEntity<PlayerMovementData>();
         float2 playerXZ = TopDownPlane.FromPosition(
-            SystemAPI.GetComponent<LocalTransform>(SystemAPI.GetSingletonEntity<PlayerMovementData>()).Position);
+            SystemAPI.GetComponent<LocalToWorld>(playerEntity).Position);
 
-        LocalTransform bestTransform = default;
+        float3 bestPosition = default;
+        quaternion bestRotation = quaternion.identity;
         float bestDistanceSq = float.MaxValue;
         var foundAnchor = false;
 
-        foreach (var anchorTransform in SystemAPI.Query<RefRO<LocalTransform>>().WithAll<CameraAnchor>())
+        // LocalToWorld: room anchors are children; LocalTransform alone is room-local (as if at 0,0).
+        foreach (var anchorLtw in SystemAPI.Query<RefRO<LocalToWorld>>().WithAll<CameraAnchor>())
         {
-            float2 anchorXZ = TopDownPlane.FromPosition(anchorTransform.ValueRO.Position);
+            float3 worldPos = anchorLtw.ValueRO.Position;
+            float2 anchorXZ = TopDownPlane.FromPosition(worldPos);
             float distanceSq = math.lengthsq(anchorXZ - playerXZ);
             if (distanceSq >= bestDistanceSq)
                 continue;
 
             bestDistanceSq = distanceSq;
-            bestTransform = anchorTransform.ValueRO;
+            bestPosition = worldPos;
+            bestRotation = anchorLtw.ValueRO.Rotation;
             foundAnchor = true;
         }
 
@@ -62,8 +68,8 @@ public partial class CameraAnchorFollowSystem : SystemBase
         float positionT = 1f - math.exp(-deltaTime / math.max(0.01f, positionSmoothTime));
         float rotationT = 1f - math.exp(-deltaTime / math.max(0.01f, rotationSmoothTime));
 
-        float3 smoothedPosition = math.lerp(currentPosition, bestTransform.Position, positionT);
-        quaternion smoothedRotation = math.slerp(currentRotation, bestTransform.Rotation, rotationT);
+        float3 smoothedPosition = math.lerp(currentPosition, bestPosition, positionT);
+        quaternion smoothedRotation = math.slerp(currentRotation, bestRotation, rotationT);
 
         cameraTransform.SetPositionAndRotation(smoothedPosition, smoothedRotation);
 

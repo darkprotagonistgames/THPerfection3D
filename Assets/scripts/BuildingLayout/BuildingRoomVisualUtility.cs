@@ -99,6 +99,49 @@ public static class BuildingRoomVisualUtility
         float3 position = new(instance.Origin.x * cellSize, floorY, instance.Origin.y * cellSize);
         quaternion rotation = quaternion.RotateY((int)instance.Rotation * math.PI * 0.5f);
         entityManager.SetComponentData(roomEntity, LocalTransform.FromPositionRotation(position, rotation));
+
+        StampRoomCameraAnchors(entityManager, roomEntity, instance.Id, instance.Rotation);
+    }
+
+    /// <summary>
+    /// Stamps instance id and counters room yaw on camera anchors so preferred world rotation
+    /// (authored north) stays world-aligned. Position stays room-local. Anchors stay disabled
+    /// until the player enters the room.
+    /// </summary>
+    public static void StampRoomCameraAnchors(
+        EntityManager entityManager,
+        Entity roomEntity,
+        int roomInstanceId,
+        Rotation90 roomRotation)
+    {
+        if (!entityManager.HasBuffer<LinkedEntityGroup>(roomEntity))
+            return;
+
+        quaternion roomYaw = quaternion.RotateY((int)roomRotation * math.PI * 0.5f);
+        quaternion invRoomYaw = math.inverse(roomYaw);
+
+        DynamicBuffer<LinkedEntityGroup> linked = entityManager.GetBuffer<LinkedEntityGroup>(roomEntity);
+        for (int i = 0; i < linked.Length; i++)
+        {
+            Entity child = linked[i].Value;
+            if (!entityManager.HasComponent<RoomCameraAnchor>(child))
+                continue;
+
+            RoomCameraAnchor anchor = entityManager.GetComponentData<RoomCameraAnchor>(child);
+            anchor.RoomInstanceId = roomInstanceId;
+            entityManager.SetComponentData(child, anchor);
+
+            if (entityManager.HasComponent<LocalTransform>(child))
+            {
+                LocalTransform local = entityManager.GetComponentData<LocalTransform>(child);
+                // worldRot = roomYaw * localRot  =>  localRot = inv(roomYaw) * preferredWorld
+                local.Rotation = math.normalize(math.mul(invRoomYaw, anchor.PreferredWorldRotation));
+                entityManager.SetComponentData(child, local);
+            }
+
+            if (entityManager.HasComponent<CameraAnchor>(child))
+                entityManager.SetComponentEnabled<CameraAnchor>(child, false);
+        }
     }
 
     public static void ApplyDoorVisuals(

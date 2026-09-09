@@ -17,11 +17,10 @@ public static class CombatAttackTargeting
 {
     public static EntityQuery CreateHurtboxTargetQuery(ref SystemState state)
     {
-        return state.GetEntityQuery(
-            ComponentType.ReadOnly<LocalTransform>(),
-            ComponentType.ReadOnly<HurtboxOwner>(),
-            ComponentType.ReadOnly<PhysicsCollider>(),
-            ComponentType.ReadOnly<HurtboxData>());
+        // EntityQueryBuilder avoids the managed ComponentType[] params array (Burst BC1028).
+        return new EntityQueryBuilder(Allocator.Temp)
+            .WithAll<LocalTransform, HurtboxOwner, PhysicsCollider, HurtboxData>()
+            .Build(ref state);
     }
 
     public static void CollectHurtboxTargets(EntityQuery query, NativeList<CombatAttackTargetCandidate> targets)

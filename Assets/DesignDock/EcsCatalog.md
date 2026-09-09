@@ -50,8 +50,8 @@ When you add, rename, or remove a custom `IComponentData`, buffer, or system, up
 
 | Type | Kind | What it does |
 |------|------|----------------|
-| `CameraAnchor` | tag | Fixed camera pose for a world region. |
-| `CameraAnchorGridConfig` | singleton | Grid spawn settings (FOV, aspect, world size, overlap). |
+| `CameraAnchor` | enableable tag | Fixed camera pose; room anchors enabled only while the player is in that room. |
+| `RoomCameraAnchor` | data | Per-instance room id stamped at spawn (`0` at bake). |
 | `MainEntityCamera` | tag | Baked on the camera-rig/config entity; follow system mirrors the smoothed pose onto it when present. |
 | `WorldSurfaceBounds` | singleton | Playable XZ plane width/depth from origin. |
 | `HeatSignatureData` | data | Radar heat type, amount, and scatter size. |
@@ -76,6 +76,16 @@ When you add, rename, or remove a custom `IComponentData`, buffer, or system, up
 | `RoomDoorOpenVisualEntity` | buffer | Extra open-door visual entities on a socket. |
 | `RoomDoorClosedVisualEntity` | buffer | Extra closed-door visual entities on a socket. |
 
+### Spatial occupancy
+
+| Type | Kind | What it does |
+|------|------|----------------|
+| `TracksSpatialOccupancy` | tag | Opt-in: entity participates in cell/room tracking. |
+| `GridCellLocation` | data | Cached `FloorId` + grid `int2` from transform. |
+| `RoomLocation` | data | Cached `RoomInstanceId` (`0` = outside stamped cells). |
+| `GridCellChanged` | enableable | Enabled one frame when cell changes (previous/current). |
+| `RoomChanged` | enableable | Enabled one frame when room changes (previous/current). |
+
 ### Spawning and lifetime
 
 | Type | Kind | What it does |
@@ -94,6 +104,8 @@ Do not edit the generated file by hand; change the ECS Event System config and r
 | `jumpEvent` | frame event | Jump from a sender (`high`). |
 | `damageEvent` | frame event | Damage to a victim (amount, weapon, targetable type). |
 | `deathEvent` | frame event | Death of `Sender`. |
+| `roomChangedEvent` | frame event | Any tracked entity changed rooms (`previousRoomId`, `currentRoomId`). |
+| `playerRoomChangedEvent` | frame event | Player (`PlayerMovementData`) changed rooms. |
 | `weponbatTag` | tag | Added on damage events with `wepon.bat`. |
 | `targetablewallTag` / `targetablezombiTag` / `targetableplayerTag` | tags | Added on damage events from `targetable`. |
 
@@ -137,14 +149,21 @@ Do not edit the generated file by hand; change the ECS Event System config and r
 | `RoomDoorVisualBakingSystem` | baking (`PostBakingSystemGroup`) | Strips `Disabled` from baked door visuals so runtime can show them. |
 | `BuildingLayoutChangedCleanupSystem` | simulation, last | Disables `BuildingLayoutChanged` after consumers have seen it. |
 
+### Spatial occupancy
+
+| System | Group / notes | What it does |
+|--------|---------------|----------------|
+| `SpatialOccupancyUpdateSystem` | after transforms, before event enable | Resolves cell/room from layout blob; enables change tags; emits room events. |
+| `SpatialOccupancyCleanupSystem` | simulation, last | Disables `GridCellChanged` / `RoomChanged` after consumers. |
+
 ### Camera, spawn, radar, TTL, events
 
 | System | Group / notes | What it does |
 |--------|---------------|----------------|
 | `PrefabSpawnerSystem` | initialization | Instantiates authored prefabs at positions, then disables itself. |
 | `SafeRandomSpawnerSystem` | simulation, first | Random XZ spawns avoiding spawn-protection spheres. |
-| `CameraAnchorSpawnSystem` | simulation, first | Builds the camera-anchor grid from config (once). |
-| `CameraAnchorFollowSystem` | after Rukhanka, before transforms | Moves the GameObject camera toward the nearest anchor. |
+| `PlayerRoomCameraAnchorSystem` | after event enable, before cleanup | Enables room `CameraAnchor`s matching `playerRoomChangedEvent` room id. |
+| `CameraAnchorFollowSystem` | after Rukhanka, before transforms | Moves the GameObject camera toward the nearest enabled room anchor. |
 | `RadarRendererSystem` | `SystemBase` | Paints a heatmap texture from `HeatSignatureData`. |
 | `TtlSystem` | simulation | Counts down `TtlData` and destroys expired entities. |
 | `EnableAllEcsEventsSystem` | generated | Sets `Enabled` on new frame-event entities. |
@@ -159,4 +178,6 @@ Do not edit the generated file by hand; change the ECS Event System config and r
 - **`EcsSpawnBridge`** (MonoBehaviour) consumes `SpawnRequest` and instantiates registered prefabs.
 - **`PlayerInventoryManager`** (MonoBehaviour) reads the weapon catalog and spawns the active weapon entity.
 - **`BuildingLayoutEcsBridge`** (MonoBehaviour on `BuildingRunDirector`) commits `BuildingRunState` into the layout singleton and room entities.
+- **`CameraAnchorAuthoring`** (on room prefab children) bakes disabled room camera anchors; instance id stamped at spawn.
+- **`RoomIdDebugOverlay`** (MonoBehaviour) optionally draws room instance ids at each layout cell center in the Game view (`drawRoomIds`).
 - **`MoveToStats` / `SpawnConfigBlob` / `BuildingLayoutBlob`** are blob payloads referenced by components, not `IComponentData`.

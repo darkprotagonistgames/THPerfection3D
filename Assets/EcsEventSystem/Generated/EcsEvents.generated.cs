@@ -56,6 +56,22 @@ namespace THPerfection.GeneratedEvents
         public bool Enabled;
     }
 
+    public struct roomChangedEvent : IEcsFrameEvent
+    {
+        public Entity Sender;
+        public bool Enabled;
+        public int previousRoomId;
+        public int currentRoomId;
+    }
+
+    public struct playerRoomChangedEvent : IEcsFrameEvent
+    {
+        public Entity Sender;
+        public bool Enabled;
+        public int previousRoomId;
+        public int currentRoomId;
+    }
+
     public static class EcsEventExtensions
     {
         public static Entity CreatejumpEvent(this Entity sender, EntityCommandBuffer ecb, float high)
@@ -176,6 +192,62 @@ switch (sourceType)
             return entity;
         }
 
+        public static Entity CreateroomChangedEvent(this Entity sender, EntityCommandBuffer ecb, int previousRoomId, int currentRoomId)
+        {
+            var entity = ecb.CreateEntity();
+            var ev = new roomChangedEvent
+            {
+                Sender = sender,
+                Enabled = false,
+                previousRoomId = previousRoomId,
+                currentRoomId = currentRoomId,
+            };
+            ecb.AddComponent(entity, ev);
+            return entity;
+        }
+
+        public static Entity CreateroomChangedEvent(this Entity sender, EntityCommandBuffer.ParallelWriter ecb, int sortKey, int previousRoomId, int currentRoomId)
+        {
+            var entity = ecb.CreateEntity(sortKey);
+            var ev = new roomChangedEvent
+            {
+                Sender = sender,
+                Enabled = false,
+                previousRoomId = previousRoomId,
+                currentRoomId = currentRoomId,
+            };
+            ecb.AddComponent(sortKey, entity, ev);
+            return entity;
+        }
+
+        public static Entity CreateplayerRoomChangedEvent(this Entity sender, EntityCommandBuffer ecb, int previousRoomId, int currentRoomId)
+        {
+            var entity = ecb.CreateEntity();
+            var ev = new playerRoomChangedEvent
+            {
+                Sender = sender,
+                Enabled = false,
+                previousRoomId = previousRoomId,
+                currentRoomId = currentRoomId,
+            };
+            ecb.AddComponent(entity, ev);
+            return entity;
+        }
+
+        public static Entity CreateplayerRoomChangedEvent(this Entity sender, EntityCommandBuffer.ParallelWriter ecb, int sortKey, int previousRoomId, int currentRoomId)
+        {
+            var entity = ecb.CreateEntity(sortKey);
+            var ev = new playerRoomChangedEvent
+            {
+                Sender = sender,
+                Enabled = false,
+                previousRoomId = previousRoomId,
+                currentRoomId = currentRoomId,
+            };
+            ecb.AddComponent(sortKey, entity, ev);
+            return entity;
+        }
+
     }
 
     [BurstCompile]
@@ -208,6 +280,22 @@ switch (sourceType)
             }
 
             foreach (var ev in SystemAPI.Query<RefRW<deathEvent>>())
+            {
+                if (!ev.ValueRO.Enabled)
+                {
+                    ev.ValueRW.Enabled = true;
+                }
+            }
+
+            foreach (var ev in SystemAPI.Query<RefRW<roomChangedEvent>>())
+            {
+                if (!ev.ValueRO.Enabled)
+                {
+                    ev.ValueRW.Enabled = true;
+                }
+            }
+
+            foreach (var ev in SystemAPI.Query<RefRW<playerRoomChangedEvent>>())
             {
                 if (!ev.ValueRO.Enabled)
                 {
@@ -250,6 +338,22 @@ switch (sourceType)
             }
 
             foreach (var (ev, entity) in SystemAPI.Query<RefRO<deathEvent>>().WithEntityAccess())
+            {
+                if (ev.ValueRO.Enabled)
+                {
+                    ecb.DestroyEntity(entity);
+                }
+            }
+
+            foreach (var (ev, entity) in SystemAPI.Query<RefRO<roomChangedEvent>>().WithEntityAccess())
+            {
+                if (ev.ValueRO.Enabled)
+                {
+                    ecb.DestroyEntity(entity);
+                }
+            }
+
+            foreach (var (ev, entity) in SystemAPI.Query<RefRO<playerRoomChangedEvent>>().WithEntityAccess())
             {
                 if (ev.ValueRO.Enabled)
                 {

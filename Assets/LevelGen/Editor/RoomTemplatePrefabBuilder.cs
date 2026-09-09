@@ -30,6 +30,7 @@ namespace THPerfection.LevelGen.Editor
       Transform cellsRoot = CreateChild(markersRoot, "Cells");
       Transform doorsRoot = CreateChild(markersRoot, "Doors");
       Transform artRoot = CreateChild(root.transform, "Art");
+      Transform anchorsRoot = CreateChild(root.transform, "Anchors");
 
       authoring.MarkersRoot = markersRoot;
 
@@ -84,6 +85,8 @@ namespace THPerfection.LevelGen.Editor
           }
         }
       }
+
+      CreateCameraAnchor(anchorsRoot, design);
 
       if (!authoring.TryBake(out _, out string error))
         Debug.LogWarning($"[LevelGen] Generated hierarchy failed bake validation: {error}", root);
@@ -177,6 +180,22 @@ namespace THPerfection.LevelGen.Editor
       var go = new GameObject(name);
       go.transform.SetParent(parent, false);
       return go.transform;
+    }
+
+    static void CreateCameraAnchor(Transform anchorsRoot, RoomTemplateDesign design)
+    {
+      if (!RoomCameraAnchorPose.TryCompute(
+            design.Cells,
+            design.CellSize,
+            out Vector3 localPosition,
+            out Quaternion localRotation))
+        return;
+
+      Transform slot = CreateChild(anchorsRoot, "CameraAnchorSlot");
+      slot.localPosition = localPosition;
+      slot.localRotation = localRotation;
+      var anchor = slot.gameObject.AddComponent<CameraAnchorAuthoring>();
+      anchor.GizmoFrustumLength = RoomCameraAnchorPose.LookDistanceToGround(localPosition.y);
     }
 
     static Vector3 CellLocalPosition(Vector2Int cell, float cellSize) =>

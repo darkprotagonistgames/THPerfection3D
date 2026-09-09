@@ -1,9 +1,10 @@
 using Unity.Entities;
 
 /// <summary>
-/// Marks a baked camera anchor entity whose <see cref="Unity.Transforms.LocalTransform"/>
-/// defines a fixed camera pose for a region of the world.
+/// Marks a camera anchor entity whose <see cref="Unity.Transforms.LocalTransform"/>
+/// defines a fixed camera pose. Enableable: room anchors start disabled and are
+/// enabled only while the player is in that room instance.
 /// </summary>
-public struct CameraAnchor : IComponentData
+public struct CameraAnchor : IComponentData, IEnableableComponent
 {
 }

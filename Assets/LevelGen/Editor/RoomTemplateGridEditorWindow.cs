@@ -150,7 +150,8 @@ namespace THPerfection.LevelGen.Editor
       EditorGUILayout.HelpBox(
         "Cells: click to toggle occupancy.\n"
         + "Edges: click exterior edge to cycle Wall → Door. Alt+click a door edge to set Main door.\n"
-        + "Generated prefabs match your examples: Markers/Cells, Markers/Doors, Art/Cell_x_y/Wall_Side (rotated slots).",
+        + "Generated prefabs match your examples: Markers/Cells, Markers/Doors, Art/Cell_x_y/Wall_Side (rotated slots).\n"
+        + "A CameraAnchorSlot is placed over occupied cells (pitch 85°) high enough to show the room plus neighbors in the center-square viewport. Move or duplicate it on the prefab.",
         MessageType.None);
     }
 
