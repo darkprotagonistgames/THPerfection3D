@@ -43,11 +43,11 @@ namespace THPerfection.GeneratedEvents
     public struct damageEvent : IEcsFrameEvent
     {
         public Entity Sender;
-        public Entity Victim;
         public bool Enabled;
         public float amount;
         public wepon sourceType;
         public targetable targetType;
+        public Unity.Entities.Entity Origin;
     }
 
     public struct deathEvent : IEcsFrameEvent
@@ -100,20 +100,20 @@ namespace THPerfection.GeneratedEvents
             return entity;
         }
 
-        public static Entity CreatedamageEvent(this Entity victim, Entity sender, EntityCommandBuffer ecb, float amount, wepon sourceType, targetable targetType)
+        public static Entity CreatedamageEvent(this Entity sender, EntityCommandBuffer ecb, float amount, wepon sourceType, targetable targetType, Unity.Entities.Entity origin)
         {
             var entity = ecb.CreateEntity();
             var ev = new damageEvent
             {
                 Sender = sender,
-                Victim = victim,
                 Enabled = false,
                 amount = amount,
                 sourceType = sourceType,
                 targetType = targetType,
+                Origin = origin,
             };
             ecb.AddComponent(entity, ev);
-switch (sourceType)
+            switch (sourceType)
             {
                 case wepon.bat:
                     ecb.AddComponent(entity, new weponbatTag());
@@ -134,20 +134,20 @@ switch (sourceType)
             return entity;
         }
 
-        public static Entity CreatedamageEvent(this Entity victim, Entity sender, EntityCommandBuffer.ParallelWriter ecb, int sortKey, float amount, wepon sourceType, targetable targetType)
+        public static Entity CreatedamageEvent(this Entity sender, EntityCommandBuffer.ParallelWriter ecb, int sortKey, float amount, wepon sourceType, targetable targetType, Unity.Entities.Entity origin)
         {
             var entity = ecb.CreateEntity(sortKey);
             var ev = new damageEvent
             {
                 Sender = sender,
-                Victim = victim,
                 Enabled = false,
                 amount = amount,
                 sourceType = sourceType,
                 targetType = targetType,
+                Origin = origin,
             };
             ecb.AddComponent(sortKey, entity, ev);
-switch (sourceType)
+            switch (sourceType)
             {
                 case wepon.bat:
                     ecb.AddComponent(sortKey, entity, new weponbatTag());

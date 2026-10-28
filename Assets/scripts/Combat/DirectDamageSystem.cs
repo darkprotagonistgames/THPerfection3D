@@ -44,11 +44,11 @@ public partial class DirectDamageSystem : SystemBase
 
             targetable category = CombatTargetableUtility.ResolveCategory(EntityManager, _hurtboxQuery, victim);
             victim.CreatedamageEvent(
-                sender,
-                ecb,
+                 ecb,
                 directDamage.ValueRO.Damage,
                 directDamage.ValueRO.WeaponType,
-                category);
+                category,
+                sender);
 
             ecb.DestroyEntity(entity);
         }

@@ -22,7 +22,7 @@ public partial class DeathFromHealthSystem : SystemBase
             if (!ev.ValueRO.Enabled)
                 continue;
 
-            Entity victim = ev.ValueRO.Victim;
+            Entity victim = ev.ValueRO.Sender;
             if (!healthLookup.HasComponent(victim))
                 continue;
 

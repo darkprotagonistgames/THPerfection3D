@@ -48,6 +48,9 @@ MonoBehaviour:
     - Name: targetType
       Kind: 9
       EnumDefinitionName: targetable
+    - Name: Origin
+      Kind: 0
+      EnumDefinitionName: 
   - EventName: death
     Namespace: THPerfection.GeneratedEvents
     Parameters: []

@@ -142,7 +142,7 @@ public partial struct HitboxTriggerSystem : ISystem
             // Sort by hurtbox so buffer commands for the same target stay ordered across trigger pairs.
             int sortKey = hurtboxEntity.Index;
             AddInvulnerabilityRecord(hurtboxEntity, hitboxOwner, hurtbox.InvulnerabilitySeconds, sortKey, InvulnLinkLookup, Ecb);
-            hurtboxOwner.CreatedamageEvent(hitboxOwner, Ecb, sortKey, hitbox.Damage, hitbox.WeaponType, hurtbox.Category);
+            hurtboxOwner.CreatedamageEvent( Ecb, sortKey, hitbox.Damage, hitbox.WeaponType, hurtbox.Category, hitboxOwner);
         }
 
         static bool HasInvulnerabilityRecord(
