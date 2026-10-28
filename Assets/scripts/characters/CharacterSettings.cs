@@ -15,6 +15,10 @@ public class CharacterSettings : MonoBehaviour
     [Tooltip("Minimum horizontal speed before rotation updates (units/s).")]
     public float MinSpeedToRotate = 0.1f;
 
+    [Header("Floor")]
+    [Tooltip("Pin this character to the Y of the floor they are on. Physics cannot move them up or down. Turn off for flying creatures.")]
+    public bool LockToFloor = true;
+
     [Header("Health")]
     public float Health = 10f;
 
@@ -34,6 +38,9 @@ public class CharacterSettings : MonoBehaviour
                 });
             }
 
+            if (authoring.LockToFloor)
+                AddComponent(entity, new FloorLockedMotion());
+
             AddComponent(entity, new Health
             {
                 Value = math.max(0f, authoring.Health),
@@ -44,6 +51,13 @@ public class CharacterSettings : MonoBehaviour
 
 /// <summary>Marks an entity as a character (player, enemy, NPC, etc.).</summary>
 public struct CharacterTag : IComponentData { }
+
+/// <summary>
+/// Height comes from the floor this character occupies, not from rigidbody motion.
+/// Flying creatures omit this. Floor changes (stairs, elevators) update
+/// <see cref="GridCellLocation.Floor"/>; <see cref="FloorHeights"/> supplies the Y.
+/// </summary>
+public struct FloorLockedMotion : IComponentData { }
 
 /// <summary>When present, <see cref="FaceVelocityRotationSystem"/> aligns rotation to XZ velocity.</summary>
 public struct FaceVelocityRotation : IComponentData

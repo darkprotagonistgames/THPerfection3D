@@ -12,6 +12,14 @@ PrefabInstance:
       propertyPath: m_Name
       value: TestdoorClosed
       objectReference: {fileID: 0}
+    - target: {fileID: 327258271715322483, guid: e5191b848c08baf468922fb1718e1f64, type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 327258271715322483, guid: e5191b848c08baf468922fb1718e1f64, type: 3}
+      propertyPath: m_IncludeLayers.m_Bits
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 7878350319992209165, guid: e5191b848c08baf468922fb1718e1f64, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0

@@ -15,6 +15,7 @@ When you add, rename, or remove a custom `IComponentData`, buffer, or system, up
 | Type | Kind | What it does |
 |------|------|----------------|
 | `CharacterTag` | tag | Marks a character entity (player, enemy, NPC). |
+| `FloorLockedMotion` | tag | Character Y comes from the occupied floor; physics cannot raise or drop them. |
 | `FaceVelocityRotation` | data | Min XZ speed squared; when present, rotation follows velocity. |
 | `Health` | data | Current hit points. |
 | `PlayerMovementData` | data | Player acceleration and max speed. |
@@ -123,7 +124,10 @@ Do not edit the generated file by hand; change the ECS Event System config and r
 | `PlayerMovementSystem` | simulation | Accelerates the player from input; emits `jumpEvent`. |
 | `MoveToSystem` | simulation | Accelerates seekers toward `MoveToTarget` on XZ. |
 | `FollowPlayerSystem` | before `MoveToSystem` | Sets follower targets to the player XZ. |
-| `FaceVelocityRotationSystem` | after player + move-to | Faces model forward along XZ velocity (`-Z` convention). |
+| `FaceVelocityRotationSystem` | after player + move-to | Faces model forward along XZ velocity (`-Z` convention) and clears angular velocity. |
+| `FloorPlaneBeforePhysicsSystem` | before physics | Pins floor-locked characters to floor Y, clears vertical and angular velocity, uprights yaw. |
+| `FloorPlaneContactSystem` | after contacts, before jacobians | Flattens or disables vertical contacts on floor-locked bodies. |
+| `FloorPlaneAfterPhysicsSystem` | after physics export | Writes the floor Y back over any solver offset. |
 | `SnapToPlayerSystem` | before transforms | Copies player transform onto tagged entities. |
 
 ### Combat

@@ -25,6 +25,16 @@ public static class TopDownPlane
         return math.normalize(forwardXZ);
     }
 
+    /// <summary>
+    /// Yaw-only rotation that keeps <see cref="ModelForward"/> on the XZ plane.
+    /// </summary>
+    public static quaternion UprightYaw(quaternion rotation)
+    {
+        float2 forwardXZ = ForwardFromRotation(rotation);
+        float3 unityForward = new(-forwardXZ.x, 0f, -forwardXZ.y);
+        return quaternion.LookRotationSafe(unityForward, math.up());
+    }
+
     public static float3 ToLinear(float2 velocityXZ, float currentY) =>
         new(velocityXZ.x, currentY, velocityXZ.y);
 

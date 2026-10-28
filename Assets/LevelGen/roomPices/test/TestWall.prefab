@@ -12,6 +12,14 @@ PrefabInstance:
       propertyPath: m_Name
       value: TestWall
       objectReference: {fileID: 0}
+    - target: {fileID: 327258271715322483, guid: 6c5cbadac8c4dbf44b7be8e133d1d48c, type: 3}
+      propertyPath: m_Convex
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 327258271715322483, guid: 6c5cbadac8c4dbf44b7be8e133d1d48c, type: 3}
+      propertyPath: m_IncludeLayers.m_Bits
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 7878350319992209165, guid: 6c5cbadac8c4dbf44b7be8e133d1d48c, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0

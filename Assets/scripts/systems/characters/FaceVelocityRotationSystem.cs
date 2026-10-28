@@ -6,7 +6,8 @@ using Unity.Transforms;
 
 /// <summary>
 /// Rotates characters with <see cref="FaceVelocityRotation"/> so their forward
-/// axis points along their XZ <see cref="PhysicsVelocity"/>.
+/// axis points along their XZ <see cref="PhysicsVelocity"/>. Clears angular
+/// velocity every update so physics torque does not yaw the body after it stops.
 /// </summary>
 [BurstCompile]
 [UpdateAfter(typeof(PlayerMovementSystem))]
@@ -33,9 +34,11 @@ public partial struct FaceVelocityRotationSystem : ISystem
     {
         public void Execute(
             ref LocalTransform transform,
-            in PhysicsVelocity physicsVelocity,
+            ref PhysicsVelocity physicsVelocity,
             in FaceVelocityRotation settings)
         {
+            physicsVelocity.Angular = float3.zero;
+
             float2 velocityXZ = TopDownPlane.FromPosition(physicsVelocity.Linear) * -1;
             if (math.lengthsq(velocityXZ) < settings.MinSpeedSq)
                 return;
